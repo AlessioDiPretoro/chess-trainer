@@ -8,6 +8,7 @@ import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
 import type { Course } from "../types/course";
 import type { GameReviewResult } from "../types/gameReview";
 import { Board } from "./Board";
+import { BoardControls } from "./BoardControls";
 import { GameReviewPanel } from "./GameReviewPanel";
 import { MoveList } from "./MoveList";
 import { PromotionPicker, type PromotionPiece } from "./PromotionPicker";
@@ -318,13 +319,23 @@ export function PracticeView({ course, onExit }: Props) {
       </div>
 
       <div className="board-layout">
-        <Board
-          fen={fen}
-          onPieceDrop={onPieceDrop}
-          orientation={course.playerColor}
-          lastMoveFrom={lastMove?.from}
-          lastMoveTo={lastMove?.to}
-        />
+        <div className="board-column">
+          <Board
+            fen={fen}
+            onPieceDrop={onPieceDrop}
+            orientation={course.playerColor}
+            lastMoveFrom={lastMove?.from}
+            lastMoveTo={lastMove?.to}
+          />
+          <BoardControls
+            onUndo={undoLastRound}
+            onRedo={redoLastRound}
+            canUndo={!thinking && chess.history().length > 0}
+            canRedo={!thinking && redoStack.length > 0}
+            onRematch={newGame}
+            onExit={onExit}
+          />
+        </div>
 
         <div className="side-panel">
           <div className="card">
@@ -332,31 +343,6 @@ export function PracticeView({ course, onExit }: Props) {
             <p className="meta">
               Livello {difficulty}/20 · {deviations} deviazion{deviations === 1 ? "e" : "i"} dal piano
             </p>
-            <div className="btn-row">
-              <div className="move-nav">
-                <button
-                  className="btn move-nav-btn"
-                  onClick={undoLastRound}
-                  disabled={thinking || chess.history().length === 0}
-                  title="Mossa precedente"
-                  aria-label="Mossa precedente"
-                >
-                  ◄
-                </button>
-                <button
-                  className="btn move-nav-btn"
-                  onClick={redoLastRound}
-                  disabled={thinking || redoStack.length === 0}
-                  title="Mossa successiva"
-                  aria-label="Mossa successiva"
-                >
-                  ►
-                </button>
-              </div>
-              <button className="btn" onClick={newGame}>
-                Nuova partita
-              </button>
-            </div>
           </div>
 
           {pendingPromotion && (

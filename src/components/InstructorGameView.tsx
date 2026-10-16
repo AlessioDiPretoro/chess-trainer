@@ -6,6 +6,7 @@ import { reviewGame } from "../engine/gameReview";
 import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
 import type { GameReviewResult } from "../types/gameReview";
 import { Board } from "./Board";
+import { BoardControls } from "./BoardControls";
 import { GameReviewPanel } from "./GameReviewPanel";
 import { MoveList } from "./MoveList";
 import { PromotionPicker, type PromotionPiece } from "./PromotionPicker";
@@ -294,15 +295,25 @@ export function InstructorGameView({ onExit }: Props) {
       </div>
 
       <div className="board-layout">
-        <Board
-          fen={fen}
-          onPieceDrop={onPieceDrop}
-          orientation="white"
-          arrowFrom={hoveredMove?.from}
-          arrowTo={hoveredMove?.to}
-          lastMoveFrom={lastMove?.from}
-          lastMoveTo={lastMove?.to}
-        />
+        <div className="board-column">
+          <Board
+            fen={fen}
+            onPieceDrop={onPieceDrop}
+            orientation="white"
+            arrowFrom={hoveredMove?.from}
+            arrowTo={hoveredMove?.to}
+            lastMoveFrom={lastMove?.from}
+            lastMoveTo={lastMove?.to}
+          />
+          <BoardControls
+            onUndo={undoLastRound}
+            onRedo={redoLastRound}
+            canUndo={!thinking && chess.history().length > 0}
+            canRedo={!thinking && redoStack.length > 0}
+            onRematch={newGame}
+            onExit={onExit}
+          />
+        </div>
 
         <div className="side-panel">
           <div className="card explanation-card instructor-card">
@@ -385,31 +396,6 @@ export function InstructorGameView({ onExit }: Props) {
           <div className="card">
             <p className="status-line">{status}</p>
             <p className="meta">Livello {difficulty}/20</p>
-            <div className="btn-row">
-              <div className="move-nav">
-                <button
-                  className="btn move-nav-btn"
-                  onClick={undoLastRound}
-                  disabled={thinking || chess.history().length === 0}
-                  title="Mossa precedente"
-                  aria-label="Mossa precedente"
-                >
-                  ◄
-                </button>
-                <button
-                  className="btn move-nav-btn"
-                  onClick={redoLastRound}
-                  disabled={thinking || redoStack.length === 0}
-                  title="Mossa successiva"
-                  aria-label="Mossa successiva"
-                >
-                  ►
-                </button>
-              </div>
-              <button className="btn" onClick={newGame}>
-                Nuova partita
-              </button>
-            </div>
           </div>
 
           {pendingPromotion && (

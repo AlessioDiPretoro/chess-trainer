@@ -61,9 +61,14 @@ export function Board({
     }
   }
 
+  // nota: "backgroundColor" qui viene sovrascritto da darkSquareStyle/lightSquareStyle
+  // (stessa proprietà, vince lo stile base della casella). Usiamo invece un inset
+  // box-shadow con raggio enorme, che riempie comunque l'intera casella ma non è una
+  // "backgroundColor" quindi non viene sovrascritto — stesso trucco già usato sotto
+  // per la selezione, che infatti è sempre stata visibile.
   const squareStyles: Record<string, React.CSSProperties> = {};
-  if (lastMoveFrom) squareStyles[lastMoveFrom] = { backgroundColor: "rgba(245, 165, 36, 0.35)" };
-  if (lastMoveTo) squareStyles[lastMoveTo] = { backgroundColor: "rgba(245, 165, 36, 0.35)" };
+  if (lastMoveFrom) squareStyles[lastMoveFrom] = { boxShadow: "inset 0 0 0 9999px rgba(245, 165, 36, 0.35)" };
+  if (lastMoveTo) squareStyles[lastMoveTo] = { boxShadow: "inset 0 0 0 9999px rgba(245, 165, 36, 0.35)" };
 
   if (highlightSquares) {
     for (const [square, color] of Object.entries(highlightSquares)) {
