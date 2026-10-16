@@ -49,6 +49,7 @@ export function PracticeView({ course, onExit }: Props) {
   const [reviewing, setReviewing] = useState(false);
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number } | null>(null);
   const [redoStack, setRedoStack] = useState<string[][]>([]);
+  const [reviewMoveIndex, setReviewMoveIndex] = useState(-1);
 
   function updateStatusText() {
     if (chess.isCheckmate()) {
@@ -256,6 +257,7 @@ export function PracticeView({ course, onExit }: Props) {
     setBanner(null);
     setPendingPromotion(null);
     setReviewResult(null);
+    setReviewMoveIndex(-1);
     refreshDeviations();
     updateStatusText();
   }
@@ -284,6 +286,7 @@ export function PracticeView({ course, onExit }: Props) {
     setGameOver(false);
     setPendingPromotion(null);
     setReviewResult(null);
+    setReviewMoveIndex(-1);
     setReviewing(false);
     setRedoStack([]);
   }
@@ -298,6 +301,7 @@ export function PracticeView({ course, onExit }: Props) {
         setReviewProgress({ done, total })
       );
       setReviewResult(result);
+      setReviewMoveIndex(result.moves.length - 1);
     } catch (error) {
       console.error("Errore nella revisione della partita:", error);
     } finally {
@@ -308,6 +312,10 @@ export function PracticeView({ course, onExit }: Props) {
 
   const lastMoveHistory = chess.history({ verbose: true });
   const lastMove = lastMoveHistory[lastMoveHistory.length - 1];
+
+  const inReview = reviewResult !== null;
+  const reviewMove = inReview && reviewMoveIndex >= 0 ? reviewResult.moves[reviewMoveIndex] : null;
+  const boardFen = inReview ? (reviewMove ? reviewMove.fenAfter : reviewResult.initialFen) : fen;
 
   return (
     <div className="app-shell">
@@ -321,17 +329,17 @@ export function PracticeView({ course, onExit }: Props) {
       <div className="board-layout">
         <div className="board-column">
           <Board
-            fen={fen}
+            fen={boardFen}
             onPieceDrop={onPieceDrop}
             orientation={course.playerColor}
-            lastMoveFrom={lastMove?.from}
-            lastMoveTo={lastMove?.to}
+            lastMoveFrom={reviewMove ? reviewMove.from : lastMove?.from}
+            lastMoveTo={reviewMove ? reviewMove.to : lastMove?.to}
           />
           <BoardControls
-            onUndo={undoLastRound}
-            onRedo={redoLastRound}
-            canUndo={!thinking && chess.history().length > 0}
-            canRedo={!thinking && redoStack.length > 0}
+            onUndo={inReview ? () => setReviewMoveIndex((i) => Math.max(-1, i - 1)) : undoLastRound}
+            onRedo={inReview ? () => setReviewMoveIndex((i) => Math.min(reviewResult.moves.length - 1, i + 1)) : redoLastRound}
+            canUndo={inReview ? reviewMoveIndex > -1 : !thinking && chess.history().length > 0}
+            canRedo={inReview ? reviewMoveIndex < reviewResult.moves.length - 1 : !thinking && redoStack.length > 0}
             onRematch={newGame}
             onExit={onExit}
           />
@@ -371,7 +379,9 @@ export function PracticeView({ course, onExit }: Props) {
             </div>
           )}
 
-          {reviewResult && <GameReviewPanel result={reviewResult} />}
+          {reviewResult && (
+            <GameReviewPanel result={reviewResult} currentIndex={reviewMoveIndex} onSelectIndex={setReviewMoveIndex} />
+          )}
 
           <div className="card">
             <h3>Mosse</h3>

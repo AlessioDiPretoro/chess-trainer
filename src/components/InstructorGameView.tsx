@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { lookupOpeningName, suggestKnownMoves, suggestStyleIdeas } from "../data/openingNames";
 import { getDifficulty, recordGame } from "../db/db";
 import { reviewGame } from "../engine/gameReview";
+import { buildMoveComment, classifyQuality, signedScore, uciToVerboseMove } from "../engine/moveExplanation";
 import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
 import type { GameReviewResult } from "../types/gameReview";
 import { Board } from "./Board";
@@ -41,6 +42,7 @@ export function InstructorGameView({ onExit }: Props) {
   const [reviewing, setReviewing] = useState(false);
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number } | null>(null);
   const [redoStack, setRedoStack] = useState<string[][]>([]);
+  const [reviewMoveIndex, setReviewMoveIndex] = useState(-1);
 
   useEffect(() => {
     const engine = new StockfishEngine();
@@ -75,21 +77,69 @@ export function InstructorGameView({ onExit }: Props) {
     }
   }
 
-  function updateCommentary() {
+  /** Prefisso sul nome dello schema riconosciuto (o sull'uscita dalla teoria nota), "" se non c'è niente di nuovo da dire. */
+  function openingPrefix(): string {
     const match = lookupOpeningName(chess.history());
     if (match) {
-      setComment(match.name);
       lastMatchedNameRef.current = match.name;
       exitedAnnouncedRef.current = false;
-    } else if (!exitedAnnouncedRef.current) {
-      setComment(
-        lastMatchedNameRef.current
-          ? `Siamo usciti dalla teoria conosciuta (ultimo schema riconosciuto: ${lastMatchedNameRef.current}).`
-          : "Nessuno schema noto riconosciuto per questa mossa."
-      );
-      exitedAnnouncedRef.current = true;
+      return `${match.name}. `;
     }
-    // se non c'è match e l'uscita dalla teoria è già stata annunciata, restiamo in silenzio
+    if (!exitedAnnouncedRef.current) {
+      exitedAnnouncedRef.current = true;
+      return lastMatchedNameRef.current
+        ? `Siamo usciti dalla teoria conosciuta (ultimo schema riconosciuto: ${lastMatchedNameRef.current}). `
+        : "";
+    }
+    return "";
+  }
+
+  /**
+   * Commenta la mossa appena giocata (da chiunque) con una frase onesta e verificabile:
+   * non solo il nome dello schema, ma anche se la mossa è stata buona o no e perché
+   * (vedi `buildMoveComment` — niente motivazioni inventate, solo fatti controllabili).
+   */
+  async function commentOnMove(
+    fenBeforeMove: string,
+    move: { san: string; from: Square; to: Square; piece: string; captured?: string },
+    moverColor: "w" | "b"
+  ) {
+    const prefix = openingPrefix();
+    const engine = engineRef.current;
+    if (!engine) {
+      setComment(prefix || "Mossa giocata.");
+      return;
+    }
+    try {
+      const depth = engineDepthFor(difficulty);
+      const before = await engine.analyze(fenBeforeMove, depth);
+      const after = await engine.analyze(chess.fen(), depth);
+      const bestEval = signedScore(before.scoreCp, before.scoreMate);
+      const ownEval = -signedScore(after.scoreCp, after.scoreMate);
+      const centipawnLoss = Math.max(0, Math.round(bestEval - ownEval));
+      const quality = classifyQuality(centipawnLoss);
+      const bestMoveSan = before.bestMove ? uciToVerboseMove(new Chess(fenBeforeMove), before.bestMove)?.san ?? null : null;
+
+      const moveComment = buildMoveComment({
+        fenBeforeMove,
+        fenAfterMove: chess.fen(),
+        moveSan: move.san,
+        moveFrom: move.from,
+        moveTo: move.to,
+        movePiece: move.piece,
+        moveCaptured: move.captured,
+        moverColor,
+        quality,
+        centipawnLoss,
+        bestMoveSan: bestMoveSan && bestMoveSan !== move.san ? bestMoveSan : null,
+        opponentBestMoveUci: after.bestMove,
+      });
+
+      setComment(`${prefix}${moveComment}`);
+    } catch (error) {
+      console.error("Errore nel commento dell'istruttore:", error);
+      setComment(prefix || "Mossa giocata.");
+    }
   }
 
   async function finishGameOver() {
@@ -109,6 +159,8 @@ export function InstructorGameView({ onExit }: Props) {
   async function continueWithOpponentMove() {
     setThinking(true);
     const engine = engineRef.current;
+    const fenBeforeMove = chess.fen();
+    const moverColor = chess.turn();
     try {
       if (engine) {
         // Preferisce restare in uno schema noto quando può: altrimenti l'avversario,
@@ -137,7 +189,7 @@ export function InstructorGameView({ onExit }: Props) {
         }
         setFen(chess.fen());
         updateStatusText();
-        updateCommentary();
+        await commentOnMove(fenBeforeMove, move, moverColor);
       }
     } catch (error) {
       console.error("Errore nella mossa dell'avversario:", error);
@@ -150,10 +202,11 @@ export function InstructorGameView({ onExit }: Props) {
     }
   }
 
-  function afterPlayerMove() {
+  async function afterPlayerMove(move: { san: string; from: Square; to: Square; piece: string; captured?: string }, fenBeforeMove: string) {
     setFen(chess.fen());
     updateStatusText();
-    updateCommentary();
+    // il giocatore in questa modalità è sempre il Bianco
+    await commentOnMove(fenBeforeMove, move, "w");
     setRedoStack([]);
 
     if (chess.isGameOver()) {
@@ -182,25 +235,28 @@ export function InstructorGameView({ onExit }: Props) {
       return false;
     }
 
+    const fenBeforeMove = chess.fen();
     const move = chess.move({ from: sourceSquare, to: targetSquare });
     if (!move) return false;
-    afterPlayerMove();
+    void afterPlayerMove(move, fenBeforeMove);
     return true;
   }
 
   function playSuggestedMove(san: string) {
     if (!ready || gameOver || thinking) return;
+    const fenBeforeMove = chess.fen();
     const move = chess.move(san);
     if (!move) return;
-    afterPlayerMove();
+    void afterPlayerMove(move, fenBeforeMove);
   }
 
   function resolvePromotion(piece: PromotionPiece) {
     if (!pendingPromotion) return;
+    const fenBeforeMove = chess.fen();
     const move = chess.move({ from: pendingPromotion.from, to: pendingPromotion.to, promotion: piece });
     setPendingPromotion(null);
     if (!move) return;
-    afterPlayerMove();
+    void afterPlayerMove(move, fenBeforeMove);
   }
 
   function undoLastRound() {
@@ -218,9 +274,16 @@ export function InstructorGameView({ onExit }: Props) {
     setGameOver(false);
     setPendingPromotion(null);
     setReviewResult(null);
+    setReviewMoveIndex(-1);
     exitedAnnouncedRef.current = false;
     updateStatusText();
-    updateCommentary();
+    refreshOpeningOnly();
+  }
+
+  /** Per annulla/ripeti: aggiorna solo l'indicazione dello schema, senza rianalizzare la mossa col motore. */
+  function refreshOpeningOnly() {
+    const prefix = openingPrefix();
+    setComment(prefix.trim() || "Nessuno schema particolare da segnalare qui.");
   }
 
   function redoLastRound() {
@@ -232,7 +295,7 @@ export function InstructorGameView({ onExit }: Props) {
     setRedoStack((stack) => stack.slice(0, -1));
     setFen(chess.fen());
     updateStatusText();
-    updateCommentary();
+    refreshOpeningOnly();
     if (chess.isGameOver()) {
       setGameOver(true);
     }
@@ -263,6 +326,7 @@ export function InstructorGameView({ onExit }: Props) {
     setPendingPromotion(null);
     setHoveredSan(null);
     setReviewResult(null);
+    setReviewMoveIndex(-1);
     setReviewing(false);
     setRedoStack([]);
   }
@@ -277,6 +341,7 @@ export function InstructorGameView({ onExit }: Props) {
         setReviewProgress({ done, total })
       );
       setReviewResult(result);
+      setReviewMoveIndex(result.moves.length - 1);
     } catch (error) {
       console.error("Errore nella revisione della partita:", error);
     } finally {
@@ -284,6 +349,10 @@ export function InstructorGameView({ onExit }: Props) {
       setReviewProgress(null);
     }
   }
+
+  const inReview = reviewResult !== null;
+  const reviewMove = inReview && reviewMoveIndex >= 0 ? reviewResult.moves[reviewMoveIndex] : null;
+  const boardFen = inReview ? (reviewMove ? reviewMove.fenAfter : reviewResult.initialFen) : fen;
 
   return (
     <div className="app-shell">
@@ -297,19 +366,19 @@ export function InstructorGameView({ onExit }: Props) {
       <div className="board-layout">
         <div className="board-column">
           <Board
-            fen={fen}
+            fen={boardFen}
             onPieceDrop={onPieceDrop}
             orientation="white"
-            arrowFrom={hoveredMove?.from}
-            arrowTo={hoveredMove?.to}
-            lastMoveFrom={lastMove?.from}
-            lastMoveTo={lastMove?.to}
+            arrowFrom={inReview ? undefined : hoveredMove?.from}
+            arrowTo={inReview ? undefined : hoveredMove?.to}
+            lastMoveFrom={reviewMove ? reviewMove.from : lastMove?.from}
+            lastMoveTo={reviewMove ? reviewMove.to : lastMove?.to}
           />
           <BoardControls
-            onUndo={undoLastRound}
-            onRedo={redoLastRound}
-            canUndo={!thinking && chess.history().length > 0}
-            canRedo={!thinking && redoStack.length > 0}
+            onUndo={inReview ? () => setReviewMoveIndex((i) => Math.max(-1, i - 1)) : undoLastRound}
+            onRedo={inReview ? () => setReviewMoveIndex((i) => Math.min(reviewResult.moves.length - 1, i + 1)) : redoLastRound}
+            canUndo={inReview ? reviewMoveIndex > -1 : !thinking && chess.history().length > 0}
+            canRedo={inReview ? reviewMoveIndex < reviewResult.moves.length - 1 : !thinking && redoStack.length > 0}
             onRematch={newGame}
             onExit={onExit}
           />
@@ -418,7 +487,9 @@ export function InstructorGameView({ onExit }: Props) {
             </div>
           )}
 
-          {reviewResult && <GameReviewPanel result={reviewResult} />}
+          {reviewResult && (
+            <GameReviewPanel result={reviewResult} currentIndex={reviewMoveIndex} onSelectIndex={setReviewMoveIndex} />
+          )}
 
           <div className="card">
             <h3>Mosse</h3>

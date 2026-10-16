@@ -1,33 +1,10 @@
-import { Chess, type Square } from "chess.js";
+import { Chess } from "chess.js";
 import { lookupOpeningName } from "../data/openingNames";
-import type { GameReviewResult, MoveQuality, MoveReview, TurningPoint } from "../types/gameReview";
+import type { GameReviewResult, MoveReview, TurningPoint } from "../types/gameReview";
+import { buildMoveComment, classifyQuality, signedScore, uciToVerboseMove } from "./moveExplanation";
 import type { StockfishEngine } from "./stockfish";
 
-const MATE_SCORE = 100000;
 const REVIEW_DEPTH = 14;
-
-function signedScore(scoreCp: number | undefined, scoreMate: number | undefined): number {
-  if (scoreMate !== undefined) return scoreMate > 0 ? MATE_SCORE : -MATE_SCORE;
-  return scoreCp ?? 0;
-}
-
-function classify(centipawnLoss: number): MoveQuality {
-  if (centipawnLoss <= 10) return "best";
-  if (centipawnLoss <= 50) return "good";
-  if (centipawnLoss <= 100) return "inaccuracy";
-  if (centipawnLoss <= 250) return "mistake";
-  return "blunder";
-}
-
-function uciToSan(chess: Chess, uci: string): string | null {
-  const from = uci.slice(0, 2) as Square;
-  const to = uci.slice(2, 4) as Square;
-  const promotion = uci.slice(4, 5) || undefined;
-  const match = chess
-    .moves({ verbose: true })
-    .find((m) => m.from === from && m.to === to && (!promotion || m.promotion === promotion));
-  return match?.san ?? null;
-}
 
 function accuracyLabel(acpl: number): string {
   if (acpl <= 20) return "Eccellente";
@@ -53,12 +30,13 @@ export async function reviewGame(
 ): Promise<GameReviewResult> {
   const chess = new Chess();
   const depth = REVIEW_DEPTH;
+  const initialFen = chess.fen();
 
-  const positions: { scoreCp?: number; scoreMate?: number; bestMove: string }[] = [];
-  positions.push(await engine.analyze(chess.fen(), depth));
+  const positions: { fen: string; scoreCp?: number; scoreMate?: number; bestMove: string }[] = [];
+  positions.push({ fen: chess.fen(), ...(await engine.analyze(chess.fen(), depth)) });
   for (const san of movesSan) {
     chess.move(san);
-    positions.push(await engine.analyze(chess.fen(), depth));
+    positions.push({ fen: chess.fen(), ...(await engine.analyze(chess.fen(), depth)) });
     onProgress?.(positions.length - 1, movesSan.length);
   }
 
@@ -72,20 +50,41 @@ export async function reviewGame(
     const bestEval = signedScore(before.scoreCp, before.scoreMate);
     const ownEval = -signedScore(after.scoreCp, after.scoreMate);
     const centipawnLoss = Math.max(0, Math.round(bestEval - ownEval));
+    const quality = classifyQuality(centipawnLoss);
 
-    const bestMoveUci = before.bestMove;
-    const bestMoveSan = bestMoveUci ? uciToSan(replay, bestMoveUci) : null;
+    const bestMoveSan = before.bestMove ? uciToVerboseMove(replay, before.bestMove)?.san ?? null : null;
+
+    const fenBeforeMove = replay.fen();
+    const moverColor = replay.turn();
+    const playedMove = replay.move(san);
+
+    const comment = buildMoveComment({
+      fenBeforeMove,
+      fenAfterMove: after.fen,
+      moveSan: san,
+      moveFrom: playedMove.from,
+      moveTo: playedMove.to,
+      movePiece: playedMove.piece,
+      moveCaptured: playedMove.captured,
+      moverColor,
+      quality,
+      centipawnLoss,
+      bestMoveSan: bestMoveSan && bestMoveSan !== san ? bestMoveSan : null,
+      opponentBestMoveUci: after.bestMove,
+    });
 
     moves.push({
       moveNumber: Math.floor(i / 2) + 1,
       color: i % 2 === 0 ? "white" : "black",
       san,
-      quality: classify(centipawnLoss),
+      quality,
       centipawnLoss,
       bestMoveSan: bestMoveSan && bestMoveSan !== san ? bestMoveSan : null,
+      comment,
+      fenAfter: after.fen,
+      from: playedMove.from,
+      to: playedMove.to,
     });
-
-    replay.move(san);
   }
 
   const playerMoves = moves.filter((m) => m.color === playerColor);
@@ -111,6 +110,7 @@ export async function reviewGame(
   }
 
   return {
+    initialFen,
     moves,
     openingName,
     playerAverageCentipawnLoss,
