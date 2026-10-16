@@ -12,23 +12,62 @@ export const caroKann: Course = {
     { title: "Resistere all'avanzata h4-h5", stepIndices: [6, 7, 8] },
   ],
   plan: [
-    { san: "c6", explanation: "Prepari ...d5 sostenendo il pedone con il pedone c: una struttura più solida (anche se meno attiva) della Difesa Francese." },
-    { san: "d5", explanation: "Sfidi subito il centro bianco, offrendo di cambiare i pedoni centrali." },
-    { san: "dxe4", explanation: "Catturi il pedone: il Bianco deve riprendere con il cavallo, perdendo un tempo di sviluppo." },
+    {
+      san: "c6",
+      explanation:
+        "Prepari ...d5 sostenendo il pedone con il pedone c: una struttura più solida (anche se meno attiva) della Difesa Francese. È una scelta di struttura pedonale fatta fin dalla prima mossa: decidi subito di privilegiare la solidità a lungo termine rispetto all'attività immediata.",
+      principle: "struttura",
+    },
+    {
+      san: "d5",
+      explanation:
+        "Sfidi subito il centro bianco, offrendo di cambiare i pedoni centrali. Anche giocando il Nero, il principio resta lo stesso: contestare il centro appena possibile, invece di lasciare che il Bianco lo occupi senza opposizione.",
+      principle: "centro",
+    },
+    {
+      san: "dxe4",
+      explanation:
+        "Catturi il pedone: il Bianco deve riprendere con il cavallo, perdendo di fatto un tempo di sviluppo rispetto a come avrebbe voluto schierare i suoi pezzi. Una semplice cattura può già mettere in difficoltà l'avversario sul piano dei tempi.",
+      principle: "tempo",
+    },
     {
       san: "Bf5",
-      explanation: "Sviluppi l'alfiere fuori dalla catena di pedoni prima di giocare ...e6: è il vantaggio tipico del Caro-Kann rispetto alla Francese, dove questo alfiere resta chiuso in casa.",
+      explanation:
+        "Sviluppi l'alfiere fuori dalla catena di pedoni prima di giocare ...e6: è il vantaggio strutturale tipico del Caro-Kann rispetto alla Francese, dove questo stesso alfiere resta chiuso in casa per tutta la partita. L'ordine delle mosse qui non è un dettaglio tecnico: è precisamente ciò che distingue le due aperture.",
       patternTag: "caro-kann-setup",
+      principle: "sviluppo",
     },
-    { san: "Bg6", explanation: "Ritiri l'alfiere mantenendolo attivo sulla diagonale, invece di concederlo in cambio con ...Bg4 o mosse simili." },
-    { san: "h6", explanation: "Mossa prudente: prepari ...Nf6 togliendo al Bianco la possibilità di un fastidioso Ng5, mentre osservi l'espansione bianca con h4-h5." },
-    { san: "Nd7", explanation: "Sviluppi il cavallo verso una casa flessibile, pronto a riposizionarsi su b6 o f6 secondo necessità." },
+    {
+      san: "Bg6",
+      explanation:
+        "Ritiri l'alfiere mantenendolo attivo sulla diagonale, invece di concederlo in cambio con ...Bg4 o mosse simili. Conservare la coppia degli alfieri (o almeno un alfiere attivo) quando non c'è un buon motivo per cederlo è spesso una scelta strategica silenziosa ma concreta.",
+      principle: "coppia-alfieri",
+    },
+    {
+      san: "h6",
+      explanation:
+        "Mossa prudente: prepari ...Nf6 togliendo al Bianco la possibilità di un fastidioso Ng5, mentre osservi l'espansione bianca con h4-h5. Prevenire un problema prima che si presenti, invece di doverci reagire più avanti in condizioni peggiori, è l'essenza della profilassi.",
+      principle: "profilassi",
+    },
+    {
+      san: "Nd7",
+      explanation:
+        "Sviluppi il cavallo verso una casa flessibile, pronto a riposizionarsi su b6 o f6 secondo necessità. Uno sviluppo che non si impegna troppo presto su un piano preciso lascia aperte più strade per adattarti a come gioca il Bianco.",
+      principle: "sviluppo",
+    },
     {
       san: "Bh7",
-      explanation: "Ritiri l'alfiere in un angolo sicuro ma ancora utile sulla diagonale, lasciando aperta la strada per l'arrocco.",
+      explanation:
+        "Ritiri l'alfiere in un angolo sicuro ma ancora utile sulla diagonale, lasciando aperta la strada per l'arrocco. Un pezzo al sicuro e ancora attivo vale più di un pezzo aggressivo ma esposto a essere attaccato con guadagno di tempo.",
       patternTag: "caro-kann-trade",
+      principle: "sviluppo",
     },
-    { san: "Bxd3", explanation: "Scambi il tuo alfiere con quello bianco su d3, semplificando la posizione ed eliminando un pezzo che altrimenti punterebbe verso il tuo arrocco." },
+    {
+      san: "Bxd3",
+      explanation:
+        "Scambi il tuo alfiere con quello bianco su d3, semplificando la posizione ed eliminando un pezzo che altrimenti punterebbe verso il tuo arrocco. Non tutti i cambi sono uguali: qui elimini specificamente il pezzo che l'avversario userebbe per attaccare il tuo re, un cambio mirato alla sicurezza del re più che alla semplificazione in sé.",
+      principle: "re-sicuro",
+    },
   ],
   book: {
     "": [{ san: "e4", weight: 1, minLevel: 0 }],

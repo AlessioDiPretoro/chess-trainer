@@ -5,6 +5,8 @@ export type PlanStep = {
   explanation: string;
   /** Tag del pattern tattico/posizione classica a cui questo step prepara, se presente. */
   patternTag?: string;
+  /** Chiave in `chessPrinciples` del principio generale (non specifico di quest'apertura) che questa mossa esemplifica. */
+  principle?: string;
 };
 
 export type BookReply = {

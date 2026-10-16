@@ -1,5 +1,6 @@
 import { Chess } from "chess.js";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { chessPrinciples } from "../data/chessPrinciples";
 import { getDifficulty, markLessonCompleted } from "../db/db";
 import { playScriptedOpponentMove } from "../engine/opponent";
 import { applyPlannedMove } from "../engine/planSafety";
@@ -88,6 +89,8 @@ export function LessonView({ course, lessonIndex, onExit, onNextLesson }: Props)
   const idea = currentStep?.patternTag
     ? course.tacticalIdeas.find((t) => t.patternTag === currentStep.patternTag)
     : undefined;
+
+  const principle = currentStep?.principle ? chessPrinciples[currentStep.principle] : undefined;
 
   async function advanceAfterCorrectMove() {
     setFeedback("");
@@ -185,6 +188,14 @@ export function LessonView({ course, lessonIndex, onExit, onNextLesson }: Props)
                   Mostra la mossa
                 </button>
               </div>
+            </div>
+          )}
+
+          {principle && !completed && (
+            <div className="card tactical-idea">
+              <span className="pattern-tag">principio generale</span>
+              <h3>{principle.title}</h3>
+              <p>{principle.description}</p>
             </div>
           )}
 

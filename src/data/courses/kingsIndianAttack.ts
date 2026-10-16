@@ -12,23 +12,62 @@ export const kingsIndianAttack: Course = {
     { title: "Spazio e attacco", stepIndices: [6, 7, 8] },
   ],
   plan: [
-    { san: "Nf3", explanation: "Sviluppi in modo flessibile, senza svelare subito come sarà la struttura centrale." },
-    { san: "g3", explanation: "Prepari il fianchetto dell'alfiere, che controllerà la lunga diagonale a1-h8." },
+    {
+      san: "Nf3",
+      explanation:
+        "Sviluppi in modo flessibile, senza svelare subito come sarà la struttura centrale: a differenza del London, qui decidi la casa dei pedoni centrali solo più avanti, osservando come si schiera il Nero. Sviluppare prima di impegnarsi è una scelta di prudenza tanto quanto di principio: meno informazioni dai, meno l'avversario può preparare in anticipo.",
+      principle: "sviluppo",
+    },
+    {
+      san: "g3",
+      explanation:
+        "Prepari il fianchetto dell'alfiere, che controllerà la lunga diagonale a1-h8 — un modo indiretto ma molto efficace di influenzare il centro: invece di occupare le case centrali con i pedoni, le controlli a distanza con un pezzo.",
+      principle: "centro",
+    },
     {
       san: "Bg2",
-      explanation: "L'alfiere prende posizione sulla diagonale lunga, pronto a sostenere lo sfondamento centrale.",
+      explanation:
+        "L'alfiere prende posizione sulla diagonale lunga, pronto a sostenere lo sfondamento centrale. Qui si vede bene il principio dello sviluppo con uno scopo preciso: non è 'una mossa qualsiasi', ma la casa esatta da cui quell'alfiere lavorerà per tutta la partita.",
       patternTag: "kia-setup",
+      principle: "sviluppo",
     },
-    { san: "O-O", explanation: "Metti il re al sicuro presto, prima di impegnarti al centro: non hai nulla da temere tatticamente." },
-    { san: "d3", explanation: "Sostieni il centro in modo solido, lasciando aperte più opzioni rispetto a una spinta immediata." },
-    { san: "Nbd2", explanation: "Sviluppi l'ultimo cavallo, pronto a sostenere la futura spinta e4 o a saltare in c4." },
-    { san: "e4", explanation: "Ora che lo sviluppo è completo, occupi il centro e guadagni spazio." },
+    {
+      san: "O-O",
+      explanation:
+        "Metti il re al sicuro presto, prima di impegnarti al centro: non hai nulla da temere tatticamente. Arroccare appena possibile, invece di rimandarlo per fare altro, è uno dei consigli più ripetuti — e più spesso ignorati dai principianti — in ogni manuale di apertura: un re ancora al centro è un bersaglio permanente.",
+      principle: "re-sicuro",
+    },
+    {
+      san: "d3",
+      explanation:
+        "Sostieni il centro in modo solido, lasciando aperte più opzioni rispetto a una spinta immediata come d4. Una struttura pedonale flessibile, che non si impegna subito, ti permette di scegliere il piano giusto DOPO aver visto come si schiera l'avversario, invece di doverti adattare a una decisione presa troppo presto.",
+      principle: "struttura",
+    },
+    {
+      san: "Nbd2",
+      explanation:
+        "Sviluppi l'ultimo cavallo minore, pronto a sostenere la futura spinta e4 o a saltare in c4. Con tutti i pezzi minori sviluppati e il re al sicuro, hai completato la fase di apertura nell'ordine corretto, prima ancora di pensare a un piano d'attacco.",
+      principle: "sviluppo",
+    },
+    {
+      san: "e4",
+      explanation:
+        "Ora che lo sviluppo è completo, occupi il centro e guadagni spazio. Non prima: spingere i pedoni centrali mentre i pezzi sono ancora fermi in casa rischia di creare bersagli senza benefici concreti — il momento in cui spingere conta quanto la spinta stessa.",
+      principle: "centro",
+    },
     {
       san: "Re1",
-      explanation: "La torre sostiene la colonna e, preparando l'eventuale avanzata e4-e5.",
+      explanation:
+        "La torre sostiene la colonna e, preparando l'eventuale avanzata e4-e5 ancora prima di giocarla. È un altro esempio di profilassi/preparazione: metti il pezzo al posto giusto in anticipo, così quando la spinta centrale arriva è già sostenuta e non lascia debolezze dietro di sé.",
       patternTag: "kia-expansion",
+      principle: "profilassi",
     },
-    { san: "e5", explanation: "La spinta tipica del sistema: guadagni spazio e togli al Nero le case migliori per i suoi pezzi." },
+    {
+      san: "e5",
+      explanation:
+        "La spinta tipica del sistema: guadagni spazio e togli al Nero le case migliori per i suoi pezzi, in particolare il cavallo f6. Guadagnare spazio non è solo 'occupare più casa sulla scacchiera': significa restringere concretamente le opzioni dei pezzi avversari, costringendoli a manovre più passive.",
+      principle: "centro",
+    },
   ],
   book: {
     Nf3: [

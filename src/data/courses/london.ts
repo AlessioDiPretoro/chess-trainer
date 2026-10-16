@@ -12,23 +12,62 @@ export const londonSystem: Course = {
     { title: "Pronti alla battaglia", stepIndices: [6, 7, 8] },
   ],
   plan: [
-    { san: "d4", explanation: "Occupi il centro e apri la diagonale per l'alfiere di c1." },
-    { san: "Nf3", explanation: "Sviluppi il cavallo prima di chiudere la diagonale dell'alfiere con e3." },
+    {
+      san: "d4",
+      explanation:
+        "Occupi subito una delle quattro case centrali e apri la diagonale per l'alfiere di c1. Non è un caso che quasi tutte le aperture serie inizino così: chi controlla il centro nelle prime mosse costringe l'avversario a reagire sul tuo terreno, invece che dettare lui il gioco.",
+      principle: "centro",
+    },
+    {
+      san: "Nf3",
+      explanation:
+        "Sviluppi un pezzo minore verso una casa attiva prima di spostare due volte lo stesso pezzo o di muovere pedoni non necessari — e lo fai prima di chiudere la diagonale dell'alfiere con e3, altrimenti quell'alfiere resterebbe bloccato in casa per diverse mosse.",
+      principle: "sviluppo",
+    },
     {
       san: "Bf4",
-      explanation: "La mossa caratteristica del London System: l'alfiere esce subito, prima che il pedone e3 gli blocchi la strada.",
+      explanation:
+        "La mossa caratteristica del London System: l'alfiere esce subito, prima che il pedone e3 gli blocchi la strada. È un esempio diretto di un errore di sequenza da evitare — muovere i pedoni centrali prima di far uscire gli alfieri che ci passerebbero sopra — risolto qui semplicemente invertendo l'ordine delle mosse.",
       patternTag: "london-setup",
+      principle: "sviluppo",
     },
-    { san: "e3", explanation: "Completi la struttura a piramide (pedoni d4-e3), proteggendo d4 e aprendo la strada all'alfiere chiaro." },
+    {
+      san: "e3",
+      explanation:
+        "Completi la struttura a piramide (pedoni d4-e3): un pedone che protegge l'altro, difficile da attaccare con un singolo pezzo. Non è un dettaglio: una struttura pedonale solida nelle prime mosse ti risparmia problemi per tutto il resto della partita, perché i pedoni, una volta spinti, non possono più tornare indietro.",
+      principle: "struttura",
+    },
     {
       san: "Bd3",
-      explanation: "L'alfiere chiaro punta verso h7: è la base dell'attacco sul lato di re che vedrai nella lezione sul sacrificio greco.",
+      explanation:
+        "L'alfiere chiaro si piazza su una diagonale che punta dritto verso il re nero, ancora prima che tu sappia con certezza se e dove il Nero arroccherà: è la base dell'attacco sul lato di re che vedrai nella lezione sul sacrificio greco. Sviluppare i pezzi verso le diagonali/colonne che porteranno all'attacco finale, non verso case qualsiasi, è ciò che distingue uno sviluppo efficace da uno solo meccanico.",
       patternTag: "greek-gift-setup",
+      principle: "sviluppo",
     },
-    { san: "Nbd2", explanation: "Sviluppi l'ultimo cavallo, lasciando libera la casa c3 per il pedone." },
-    { san: "c3", explanation: "Rinforzi il centro e dai una via di fuga all'alfiere di f4 se viene attaccato con ...Nh5 o ...Ne4." },
-    { san: "Qe2", explanation: "Colleghi le torri e prepari l'arrocco corto, tenendo la donna pronta a passare su h5 o g4 in caso di attacco." },
-    { san: "O-O", explanation: "Il re è al sicuro: la struttura di base del London è completa, ora si tratta di giocare sulle debolezze del Nero." },
+    {
+      san: "Nbd2",
+      explanation:
+        "Sviluppi l'ultimo cavallo minore, lasciando libera la casa c3 per il pedone. A questo punto hai sviluppato tutti i pezzi minori prima di muovere la donna o le torri: è esattamente l'ordine di priorità raccomandato dai manuali classici (prima i cavalli e gli alfieri, poi il resto).",
+      principle: "sviluppo",
+    },
+    {
+      san: "c3",
+      explanation:
+        "Rinforzi il centro e dai una via di fuga all'alfiere di f4 se viene attaccato con ...Nh5 o ...Ne4. È anche una mossa profilattica nel senso di Nimzowitsch: non attacca nulla direttamente, ma toglie in anticipo all'avversario una risorsa tattica futura, prima ancora che diventi un problema concreto.",
+      principle: "profilassi",
+    },
+    {
+      san: "Qe2",
+      explanation:
+        "Colleghi le torri e prepari l'arrocco corto, tenendo la donna pronta a passare su h5 o g4 in caso di attacco. Una mossa di apertura efficace serve più di uno scopo contemporaneamente: qui prepari la sicurezza del re E tieni la donna su una casa utile per il mediogioco, senza sprecare un tempo a vuoto.",
+      principle: "tempo",
+    },
+    {
+      san: "O-O",
+      explanation:
+        "Il re è al sicuro: la struttura di base del London è completa. Finché il re resta al centro, ogni colonna o diagonale che si apre è un rischio concreto — arroccare appena lo sviluppo lo permette, invece di rimandarlo per inseguire altri piani, è una delle regole più ripetute (e più spesso trascurate dai principianti) in ogni manuale di apertura.",
+      principle: "re-sicuro",
+    },
   ],
   book: {
     d4: [

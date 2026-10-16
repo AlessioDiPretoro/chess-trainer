@@ -12,23 +12,62 @@ export const ruyLopez: Course = {
     { title: "Verso la tabiya classica", stepIndices: [6, 7, 8] },
   ],
   plan: [
-    { san: "e4", explanation: "Occupi il centro e apri la diagonale per l'alfiere e la donna." },
-    { san: "Nf3", explanation: "Sviluppi attaccando subito il pedone e5, costringendo il Nero a difenderlo." },
+    {
+      san: "e4",
+      explanation:
+        "Occupi il centro e apri la diagonale per l'alfiere e la donna. È la mossa più diretta per rivendicare subito il controllo del centro, il primo obiettivo di ogni apertura secondo la teoria classica.",
+      principle: "centro",
+    },
+    {
+      san: "Nf3",
+      explanation:
+        "Sviluppi attaccando subito il pedone e5, costringendo il Nero a difenderlo. Nota come lo sviluppo non sia mai fine a sé stesso: ogni pezzo che esce dovrebbe, quando possibile, creare anche una minaccia concreta, guadagnando un tempo invece di limitarsi a occupare una casa.",
+      principle: "sviluppo",
+    },
     {
       san: "Bb5",
-      explanation: "La mossa che dà il nome all'apertura: l'alfiere mette pressione sul cavallo che difende e5.",
+      explanation:
+        "La mossa che dà il nome all'apertura: l'alfiere mette pressione sul cavallo che difende e5, continuando a far pesare la minaccia sul centro nero invece di lasciare che la tensione si sciolga da sola. È sviluppo con uno scopo preciso, non un pezzo piazzato a caso.",
       patternTag: "ruy-lopez-pin",
+      principle: "sviluppo",
     },
-    { san: "Ba4", explanation: "Dopo ...a6 mantieni la pressione invece di risolvere subito la tensione: l'alfiere resta flessibile sulla diagonale a4-e8." },
-    { san: "O-O", explanation: "Metti il re al sicuro prima di impegnarti ulteriormente al centro." },
-    { san: "Re1", explanation: "La torre si porta sulla colonna e, sostenendo il centro in vista della futura spinta d4." },
-    { san: "Bb3", explanation: "Ritiri l'alfiere su una casa sicura, fuori dalla portata di ...Na5 o ...b4, mantenendo la pressione sulla diagonale verso f7." },
+    {
+      san: "Ba4",
+      explanation:
+        "Dopo ...a6 mantieni la pressione invece di risolvere subito la tensione: l'alfiere resta flessibile sulla diagonale a4-e8. Risolvere una tensione troppo presto (qui, catturando su c6) spesso regala all'avversario una struttura migliore di quella che avrebbe ottenuto da solo: a volte il miglior uso di una minaccia è lasciarla sul tavolo.",
+      principle: "tempo",
+    },
+    {
+      san: "O-O",
+      explanation:
+        "Metti il re al sicuro prima di impegnarti ulteriormente al centro. Anche in una linea teorica profonda come questa, l'ordine delle priorità resta lo stesso dei manuali classici: sviluppo dei pezzi minori, poi sicurezza del re, solo dopo i piani più ambiziosi.",
+      principle: "re-sicuro",
+    },
+    {
+      san: "Re1",
+      explanation:
+        "La torre si porta sulla colonna e, sostenendo il centro in vista della futura spinta d4 — prima ancora di giocarla. Preparare un'azione futura mettendo i pezzi al posto giusto in anticipo è più efficiente che improvvisarla quando il momento arriva.",
+      principle: "profilassi",
+    },
+    {
+      san: "Bb3",
+      explanation:
+        "Ritiri l'alfiere su una casa sicura, fuori dalla portata di ...Na5 o ...b4, mantenendo comunque la pressione sulla diagonale verso f7. Riposizionare un pezzo su una casa più sicura, senza perderne l'efficacia, è normale quando l'avversario minaccia di guadagnare tempo contro di lui.",
+      principle: "sviluppo",
+    },
     {
       san: "c3",
-      explanation: "Prepari la spinta centrale d4 senza concedere al cavallo nero la casa b4.",
+      explanation:
+        "Prepari la spinta centrale d4 senza concedere al cavallo nero la casa b4. Una mossa di pedone apparentemente modesta che in realtà prepara con precisione la vera rottura centrale, togliendo in anticipo una risorsa all'avversario.",
       patternTag: "ruy-lopez-center",
+      principle: "profilassi",
     },
-    { san: "h3", explanation: "Mossa silenziosa ma tipica di questa tabiya: togli al Nero la possibilità di ...Bg4 fastidioso, pronto a continuare con Nbd2 e d4." },
+    {
+      san: "h3",
+      explanation:
+        "Mossa silenziosa ma tipica di questa tabiya: togli al Nero la possibilità di ...Bg4 fastidioso, pronto a continuare con Nbd2 e d4. Non tutte le mosse importanti sono spettacolari: prevenire in anticipo il fastidio di un pin sul cavallo f3 è il tipo di dettaglio che la teoria classica chiama profilassi, ed è spesso ciò che distingue una buona partita d'apertura da una solo approssimativa.",
+      principle: "profilassi",
+    },
   ],
   book: {
     e4: [
