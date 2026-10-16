@@ -7,9 +7,12 @@ type Props = {
   canRedo: boolean;
   onRematch: () => void;
   onExit: () => void;
+  /** Se presente, mostra il pulsante "Suggerimento" di fianco alle frecce. */
+  onHint?: () => void;
+  hintDisabled?: boolean;
 };
 
-export function BoardControls({ onUndo, onRedo, canUndo, canRedo, onRematch, onExit }: Props) {
+export function BoardControls({ onUndo, onRedo, canUndo, canRedo, onRematch, onExit, onHint, hintDisabled }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -54,25 +57,32 @@ export function BoardControls({ onUndo, onRedo, canUndo, canRedo, onRematch, onE
         )}
       </div>
 
-      <div className="move-nav">
-        <button
-          className="btn move-nav-btn"
-          onClick={onUndo}
-          disabled={!canUndo}
-          title="Mossa precedente"
-          aria-label="Mossa precedente"
-        >
-          ◄
-        </button>
-        <button
-          className="btn move-nav-btn"
-          onClick={onRedo}
-          disabled={!canRedo}
-          title="Mossa successiva"
-          aria-label="Mossa successiva"
-        >
-          ►
-        </button>
+      <div className="board-controls-right">
+        {onHint && (
+          <button className="btn" onClick={onHint} disabled={hintDisabled} title="Suggerimento" aria-label="Suggerimento">
+            💡 Suggerimento
+          </button>
+        )}
+        <div className="move-nav">
+          <button
+            className="btn move-nav-btn"
+            onClick={onUndo}
+            disabled={!canUndo}
+            title="Mossa precedente"
+            aria-label="Mossa precedente"
+          >
+            ◄
+          </button>
+          <button
+            className="btn move-nav-btn"
+            onClick={onRedo}
+            disabled={!canRedo}
+            title="Mossa successiva"
+            aria-label="Mossa successiva"
+          >
+            ►
+          </button>
+        </div>
       </div>
     </div>
   );

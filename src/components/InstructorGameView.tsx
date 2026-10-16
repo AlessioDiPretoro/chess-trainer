@@ -43,6 +43,8 @@ export function InstructorGameView({ onExit }: Props) {
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number } | null>(null);
   const [redoStack, setRedoStack] = useState<string[][]>([]);
   const [reviewMoveIndex, setReviewMoveIndex] = useState(-1);
+  const [hint, setHint] = useState<{ san: string; comment: string; from: string; to: string } | null>(null);
+  const [hintLoading, setHintLoading] = useState(false);
 
   useEffect(() => {
     const engine = new StockfishEngine();
@@ -208,6 +210,7 @@ export function InstructorGameView({ onExit }: Props) {
     // il giocatore in questa modalità è sempre il Bianco
     await commentOnMove(fenBeforeMove, move, "w");
     setRedoStack([]);
+    setHint(null);
 
     if (chess.isGameOver()) {
       void finishGameOver();
@@ -275,6 +278,7 @@ export function InstructorGameView({ onExit }: Props) {
     setPendingPromotion(null);
     setReviewResult(null);
     setReviewMoveIndex(-1);
+    setHint(null);
     exitedAnnouncedRef.current = false;
     updateStatusText();
     refreshOpeningOnly();
@@ -296,6 +300,7 @@ export function InstructorGameView({ onExit }: Props) {
     setFen(chess.fen());
     updateStatusText();
     refreshOpeningOnly();
+    setHint(null);
     if (chess.isGameOver()) {
       setGameOver(true);
     }
@@ -329,6 +334,42 @@ export function InstructorGameView({ onExit }: Props) {
     setReviewMoveIndex(-1);
     setReviewing(false);
     setRedoStack([]);
+    setHint(null);
+  }
+
+  async function showHint() {
+    const engine = engineRef.current;
+    if (!engine || !ready || gameOver || thinking || pendingPromotion || hintLoading || chess.turn() !== "w") return;
+    setHintLoading(true);
+    try {
+      const fenBeforeMove = chess.fen();
+      const { bestMove } = await engine.getBestMove(fenBeforeMove, engineDepthFor(difficulty));
+      const clone = new Chess(fenBeforeMove);
+      const applied = clone.move({
+        from: bestMove.slice(0, 2),
+        to: bestMove.slice(2, 4),
+        promotion: bestMove.slice(4, 5) || undefined,
+      });
+      if (!applied) return;
+      const comment = buildMoveComment({
+        fenBeforeMove,
+        fenAfterMove: clone.fen(),
+        moveSan: applied.san,
+        moveFrom: applied.from,
+        moveTo: applied.to,
+        movePiece: applied.piece,
+        moveCaptured: applied.captured,
+        moverColor: "w",
+        quality: "best",
+        centipawnLoss: 0,
+        bestMoveSan: null,
+      });
+      setHint({ san: applied.san, comment, from: applied.from, to: applied.to });
+    } catch (error) {
+      console.error("Errore nel calcolo del suggerimento:", error);
+    } finally {
+      setHintLoading(false);
+    }
   }
 
   async function startReview() {
@@ -369,8 +410,8 @@ export function InstructorGameView({ onExit }: Props) {
             fen={boardFen}
             onPieceDrop={onPieceDrop}
             orientation="white"
-            arrowFrom={inReview ? undefined : hoveredMove?.from}
-            arrowTo={inReview ? undefined : hoveredMove?.to}
+            arrowFrom={inReview ? undefined : hoveredMove?.from ?? hint?.from}
+            arrowTo={inReview ? undefined : hoveredMove?.to ?? hint?.to}
             lastMoveFrom={reviewMove ? reviewMove.from : lastMove?.from}
             lastMoveTo={reviewMove ? reviewMove.to : lastMove?.to}
           />
@@ -381,6 +422,8 @@ export function InstructorGameView({ onExit }: Props) {
             canRedo={inReview ? reviewMoveIndex < reviewResult.moves.length - 1 : !thinking && redoStack.length > 0}
             onRematch={newGame}
             onExit={onExit}
+            onHint={inReview ? undefined : showHint}
+            hintDisabled={!ready || gameOver || thinking || !!pendingPromotion || hintLoading || chess.turn() !== "w"}
           />
         </div>
 
@@ -389,6 +432,15 @@ export function InstructorGameView({ onExit }: Props) {
             <h3>Istruttore</h3>
             <p>{comment}</p>
           </div>
+
+          {hintLoading && <p className="status-line">Calcolo il suggerimento…</p>}
+
+          {hint && !inReview && (
+            <div className="card tactical-idea">
+              <h3>Suggerimento: {hint.san}</h3>
+              <p>{hint.comment}</p>
+            </div>
+          )}
 
           {(allSuggestions.length > 0 || allStyleIdeas.length > 0) && (
             <div className="card">

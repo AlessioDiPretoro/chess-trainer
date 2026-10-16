@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getDifficulty, recordGame } from "../db/db";
 import { countDeviations, playerStartIndex } from "../engine/deviations";
 import { reviewGame } from "../engine/gameReview";
+import { buildMoveComment } from "../engine/moveExplanation";
 import { playOpponentMove } from "../engine/opponent";
 import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
 import type { Course } from "../types/course";
@@ -50,6 +51,8 @@ export function PracticeView({ course, onExit }: Props) {
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number } | null>(null);
   const [redoStack, setRedoStack] = useState<string[][]>([]);
   const [reviewMoveIndex, setReviewMoveIndex] = useState(-1);
+  const [hint, setHint] = useState<{ san: string; comment: string; from: string; to: string } | null>(null);
+  const [hintLoading, setHintLoading] = useState(false);
 
   function updateStatusText() {
     if (chess.isCheckmate()) {
@@ -187,6 +190,7 @@ export function PracticeView({ course, onExit }: Props) {
     updateStatusText();
     setBanner(null);
     setRedoStack([]);
+    setHint(null);
     refreshDeviations();
 
     const start = playerStartIndex(course.playerColor);
@@ -258,6 +262,7 @@ export function PracticeView({ course, onExit }: Props) {
     setPendingPromotion(null);
     setReviewResult(null);
     setReviewMoveIndex(-1);
+    setHint(null);
     refreshDeviations();
     updateStatusText();
   }
@@ -271,6 +276,7 @@ export function PracticeView({ course, onExit }: Props) {
     setRedoStack((stack) => stack.slice(0, -1));
     setFen(chess.fen());
     setBanner(null);
+    setHint(null);
     refreshDeviations();
     updateStatusText();
     if (chess.isGameOver()) {
@@ -289,6 +295,43 @@ export function PracticeView({ course, onExit }: Props) {
     setReviewMoveIndex(-1);
     setReviewing(false);
     setRedoStack([]);
+    setHint(null);
+  }
+
+  async function showHint() {
+    const engine = engineRef.current;
+    if (!engine || !ready || gameOver || thinking || pendingPromotion || hintLoading) return;
+    setHintLoading(true);
+    try {
+      const fenBeforeMove = chess.fen();
+      const moverColor = chess.turn();
+      const { bestMove } = await engine.getBestMove(fenBeforeMove, engineDepthFor(difficulty));
+      const clone = new Chess(fenBeforeMove);
+      const applied = clone.move({
+        from: bestMove.slice(0, 2),
+        to: bestMove.slice(2, 4),
+        promotion: bestMove.slice(4, 5) || undefined,
+      });
+      if (!applied) return;
+      const comment = buildMoveComment({
+        fenBeforeMove,
+        fenAfterMove: clone.fen(),
+        moveSan: applied.san,
+        moveFrom: applied.from,
+        moveTo: applied.to,
+        movePiece: applied.piece,
+        moveCaptured: applied.captured,
+        moverColor,
+        quality: "best",
+        centipawnLoss: 0,
+        bestMoveSan: null,
+      });
+      setHint({ san: applied.san, comment, from: applied.from, to: applied.to });
+    } catch (error) {
+      console.error("Errore nel calcolo del suggerimento:", error);
+    } finally {
+      setHintLoading(false);
+    }
   }
 
   async function startReview() {
@@ -332,6 +375,8 @@ export function PracticeView({ course, onExit }: Props) {
             fen={boardFen}
             onPieceDrop={onPieceDrop}
             orientation={course.playerColor}
+            arrowFrom={!inReview ? hint?.from : undefined}
+            arrowTo={!inReview ? hint?.to : undefined}
             lastMoveFrom={reviewMove ? reviewMove.from : lastMove?.from}
             lastMoveTo={reviewMove ? reviewMove.to : lastMove?.to}
           />
@@ -342,6 +387,8 @@ export function PracticeView({ course, onExit }: Props) {
             canRedo={inReview ? reviewMoveIndex < reviewResult.moves.length - 1 : !thinking && redoStack.length > 0}
             onRematch={newGame}
             onExit={onExit}
+            onHint={inReview ? undefined : showHint}
+            hintDisabled={!ready || gameOver || thinking || !!pendingPromotion || hintLoading}
           />
         </div>
 
@@ -355,6 +402,15 @@ export function PracticeView({ course, onExit }: Props) {
 
           {pendingPromotion && (
             <PromotionPicker onChoose={resolvePromotion} onCancel={() => setPendingPromotion(null)} />
+          )}
+
+          {hintLoading && <p className="status-line">Calcolo il suggerimento…</p>}
+
+          {hint && !inReview && (
+            <div className="card tactical-idea">
+              <h3>Suggerimento: {hint.san}</h3>
+              <p>{hint.comment}</p>
+            </div>
           )}
 
           {banner && (
