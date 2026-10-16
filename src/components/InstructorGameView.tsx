@@ -250,7 +250,7 @@ export function InstructorGameView({ onExit }: Props) {
         />
 
         <div className="side-panel">
-          <div className="card explanation-card">
+          <div className="card explanation-card instructor-card">
             <h3>Istruttore</h3>
             <p>{comment}</p>
           </div>
@@ -275,7 +275,7 @@ export function InstructorGameView({ onExit }: Props) {
               {suggestions.length === 0 ? (
                 <p className="status-line">Nessun risultato per "{searchQuery}".</p>
               ) : (
-                <div className="lesson-list">
+                <div className="lesson-list lesson-list--scrollable">
                   {suggestions.map((s) => (
                     <div className="lesson-row" key={s.san}>
                       <span>
@@ -306,7 +306,7 @@ export function InstructorGameView({ onExit }: Props) {
               {styleIdeas.length === 0 ? (
                 <p className="status-line">Nessun risultato per "{searchQuery}".</p>
               ) : (
-                <div className="lesson-list">
+                <div className="lesson-list lesson-list--scrollable">
                   {styleIdeas.map((s) => (
                     <div className="lesson-row" key={s.san}>
                       <span>
