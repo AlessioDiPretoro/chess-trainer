@@ -2,8 +2,11 @@ import { Chess, type Square } from "chess.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { lookupOpeningName, suggestKnownMoves, suggestStyleIdeas } from "../data/openingNames";
 import { getDifficulty, recordGame } from "../db/db";
+import { reviewGame } from "../engine/gameReview";
 import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
+import type { GameReviewResult } from "../types/gameReview";
 import { Board } from "./Board";
+import { GameReviewPanel } from "./GameReviewPanel";
 import { MoveList } from "./MoveList";
 import { PromotionPicker, type PromotionPiece } from "./PromotionPicker";
 
@@ -33,6 +36,9 @@ export function InstructorGameView({ onExit }: Props) {
   const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion>(null);
   const [hoveredSan, setHoveredSan] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [reviewResult, setReviewResult] = useState<GameReviewResult | null>(null);
+  const [reviewing, setReviewing] = useState(false);
+  const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number } | null>(null);
 
   useEffect(() => {
     const engine = new StockfishEngine();
@@ -203,6 +209,7 @@ export function InstructorGameView({ onExit }: Props) {
     setFen(chess.fen());
     setGameOver(false);
     setPendingPromotion(null);
+    setReviewResult(null);
     exitedAnnouncedRef.current = false;
     updateStatusText();
     updateCommentary();
@@ -229,6 +236,26 @@ export function InstructorGameView({ onExit }: Props) {
     setGameOver(false);
     setPendingPromotion(null);
     setHoveredSan(null);
+    setReviewResult(null);
+    setReviewing(false);
+  }
+
+  async function startReview() {
+    const engine = engineRef.current;
+    if (!engine || reviewing) return;
+    setReviewing(true);
+    setReviewProgress(null);
+    try {
+      const result = await reviewGame(chess.history(), "white", engine, (done, total) =>
+        setReviewProgress({ done, total })
+      );
+      setReviewResult(result);
+    } catch (error) {
+      console.error("Errore nella revisione della partita:", error);
+    } finally {
+      setReviewing(false);
+      setReviewProgress(null);
+    }
   }
 
   return (
@@ -344,12 +371,23 @@ export function InstructorGameView({ onExit }: Props) {
             <PromotionPicker onChoose={resolvePromotion} onCancel={() => setPendingPromotion(null)} />
           )}
 
-          {gameOver && (
+          {gameOver && !reviewResult && (
             <div className="card explanation-card">
               <h3>Partita finita</h3>
               <p>Puoi iniziarne un'altra quando vuoi, anche con un'apertura diversa.</p>
+              <div className="btn-row">
+                <button className="btn btn-primary" onClick={startReview} disabled={reviewing}>
+                  {reviewing
+                    ? reviewProgress
+                      ? `Analisi in corso… (${reviewProgress.done}/${reviewProgress.total})`
+                      : "Analisi in corso…"
+                    : "Rivedi la partita"}
+                </button>
+              </div>
             </div>
           )}
+
+          {reviewResult && <GameReviewPanel result={reviewResult} />}
 
           <div className="card">
             <h3>Mosse</h3>

@@ -2,10 +2,13 @@ import { Chess, type Square } from "chess.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getDifficulty, recordGame } from "../db/db";
 import { countDeviations, playerStartIndex } from "../engine/deviations";
+import { reviewGame } from "../engine/gameReview";
 import { playOpponentMove } from "../engine/opponent";
 import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
 import type { Course } from "../types/course";
+import type { GameReviewResult } from "../types/gameReview";
 import { Board } from "./Board";
+import { GameReviewPanel } from "./GameReviewPanel";
 import { MoveList } from "./MoveList";
 import { PromotionPicker, type PromotionPiece } from "./PromotionPicker";
 
@@ -41,6 +44,9 @@ export function PracticeView({ course, onExit }: Props) {
   const [thinking, setThinking] = useState(false);
   const [ready, setReady] = useState(false);
   const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion>(null);
+  const [reviewResult, setReviewResult] = useState<GameReviewResult | null>(null);
+  const [reviewing, setReviewing] = useState(false);
+  const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number } | null>(null);
 
   function updateStatusText() {
     if (chess.isCheckmate()) {
@@ -241,6 +247,7 @@ export function PracticeView({ course, onExit }: Props) {
     setGameOver(false);
     setBanner(null);
     setPendingPromotion(null);
+    setReviewResult(null);
     refreshDeviations();
     updateStatusText();
   }
@@ -252,6 +259,26 @@ export function PracticeView({ course, onExit }: Props) {
     setDeviations(0);
     setGameOver(false);
     setPendingPromotion(null);
+    setReviewResult(null);
+    setReviewing(false);
+  }
+
+  async function startReview() {
+    const engine = engineRef.current;
+    if (!engine || reviewing) return;
+    setReviewing(true);
+    setReviewProgress(null);
+    try {
+      const result = await reviewGame(chess.history(), course.playerColor, engine, (done, total) =>
+        setReviewProgress({ done, total })
+      );
+      setReviewResult(result);
+    } catch (error) {
+      console.error("Errore nella revisione della partita:", error);
+    } finally {
+      setReviewing(false);
+      setReviewProgress(null);
+    }
   }
 
   return (
@@ -292,12 +319,23 @@ export function PracticeView({ course, onExit }: Props) {
             </div>
           )}
 
-          {gameOver && (
+          {gameOver && !reviewResult && (
             <div className="card explanation-card">
               <h3>Partita finita</h3>
               <p>Risultato salvato nello storico. Puoi iniziarne un'altra quando vuoi.</p>
+              <div className="btn-row">
+                <button className="btn btn-primary" onClick={startReview} disabled={reviewing}>
+                  {reviewing
+                    ? reviewProgress
+                      ? `Analisi in corso… (${reviewProgress.done}/${reviewProgress.total})`
+                      : "Analisi in corso…"
+                    : "Rivedi la partita"}
+                </button>
+              </div>
             </div>
           )}
+
+          {reviewResult && <GameReviewPanel result={reviewResult} />}
 
           <div className="card">
             <h3>Mosse</h3>

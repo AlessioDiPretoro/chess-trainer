@@ -310,6 +310,12 @@ a {
   color: var(--text-muted);
 }
 
+.move-quality-best { color: var(--accent); font-size: 0.85rem; font-weight: 600; }
+.move-quality-good { color: var(--text-muted); font-size: 0.85rem; }
+.move-quality-inaccuracy { color: var(--warning); font-size: 0.85rem; font-weight: 600; }
+.move-quality-mistake { color: #fb923c; font-size: 0.85rem; font-weight: 600; }
+.move-quality-blunder { color: var(--danger); font-size: 0.85rem; font-weight: 700; }
+
 .lesson-list--scrollable {
   max-height: 260px;
   overflow-y: auto;
