@@ -1,0 +1,21 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": false,
+    "excludedCommands": ["docker"],
+    "network": {
+      "allowedDomains": ["github.com", "*.npmjs.org", "pypi.org", "files.pythonhosted.org"],
+      "allowLocalBinding": true
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Bash(docker compose *)",
+      "Bash(curl * http://localhost:*)",
+      "Read(//tmp/**)"
+    ],
+    "deny": ["Read(./.env)"]
+  }
+}
