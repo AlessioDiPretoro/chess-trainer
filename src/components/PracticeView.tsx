@@ -47,6 +47,7 @@ export function PracticeView({ course, onExit }: Props) {
   const [reviewResult, setReviewResult] = useState<GameReviewResult | null>(null);
   const [reviewing, setReviewing] = useState(false);
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number } | null>(null);
+  const [redoStack, setRedoStack] = useState<string[][]>([]);
 
   function updateStatusText() {
     if (chess.isCheckmate()) {
@@ -183,6 +184,7 @@ export function PracticeView({ course, onExit }: Props) {
     setFen(fenAfterMove);
     updateStatusText();
     setBanner(null);
+    setRedoStack([]);
     refreshDeviations();
 
     const start = playerStartIndex(course.playerColor);
@@ -240,8 +242,13 @@ export function PracticeView({ course, onExit }: Props) {
   function undoLastRound() {
     if (thinking || chess.history().length === 0) return;
     const toUndo = chess.turn() === playerLetter ? 2 : 1;
+    const undone: string[] = [];
     for (let i = 0; i < toUndo && chess.history().length > 0; i++) {
-      chess.undo();
+      const move = chess.undo();
+      if (move) undone.unshift(move.san);
+    }
+    if (undone.length > 0) {
+      setRedoStack((stack) => [...stack, undone]);
     }
     setFen(chess.fen());
     setGameOver(false);
@@ -250,6 +257,22 @@ export function PracticeView({ course, onExit }: Props) {
     setReviewResult(null);
     refreshDeviations();
     updateStatusText();
+  }
+
+  function redoLastRound() {
+    if (thinking || redoStack.length === 0) return;
+    const next = redoStack[redoStack.length - 1];
+    for (const san of next) {
+      chess.move(san);
+    }
+    setRedoStack((stack) => stack.slice(0, -1));
+    setFen(chess.fen());
+    setBanner(null);
+    refreshDeviations();
+    updateStatusText();
+    if (chess.isGameOver()) {
+      setGameOver(true);
+    }
   }
 
   function newGame() {
@@ -261,6 +284,7 @@ export function PracticeView({ course, onExit }: Props) {
     setPendingPromotion(null);
     setReviewResult(null);
     setReviewing(false);
+    setRedoStack([]);
   }
 
   async function startReview() {
@@ -281,6 +305,9 @@ export function PracticeView({ course, onExit }: Props) {
     }
   }
 
+  const lastMoveHistory = chess.history({ verbose: true });
+  const lastMove = lastMoveHistory[lastMoveHistory.length - 1];
+
   return (
     <div className="app-shell">
       <div className="top-bar">
@@ -291,7 +318,13 @@ export function PracticeView({ course, onExit }: Props) {
       </div>
 
       <div className="board-layout">
-        <Board fen={fen} onPieceDrop={onPieceDrop} orientation={course.playerColor} />
+        <Board
+          fen={fen}
+          onPieceDrop={onPieceDrop}
+          orientation={course.playerColor}
+          lastMoveFrom={lastMove?.from}
+          lastMoveTo={lastMove?.to}
+        />
 
         <div className="side-panel">
           <div className="card">
@@ -300,9 +333,26 @@ export function PracticeView({ course, onExit }: Props) {
               Livello {difficulty}/20 · {deviations} deviazion{deviations === 1 ? "e" : "i"} dal piano
             </p>
             <div className="btn-row">
-              <button className="btn" onClick={undoLastRound} disabled={thinking || chess.history().length === 0}>
-                Annulla ultima mossa
-              </button>
+              <div className="move-nav">
+                <button
+                  className="btn move-nav-btn"
+                  onClick={undoLastRound}
+                  disabled={thinking || chess.history().length === 0}
+                  title="Mossa precedente"
+                  aria-label="Mossa precedente"
+                >
+                  ◄
+                </button>
+                <button
+                  className="btn move-nav-btn"
+                  onClick={redoLastRound}
+                  disabled={thinking || redoStack.length === 0}
+                  title="Mossa successiva"
+                  aria-label="Mossa successiva"
+                >
+                  ►
+                </button>
+              </div>
               <button className="btn" onClick={newGame}>
                 Nuova partita
               </button>

@@ -86,6 +86,9 @@ export function LessonView({ course, lessonIndex, onExit, onNextLesson }: Props)
   const verboseMoves = ready ? chess.moves({ verbose: true }) : [];
   const target = verboseMoves.find((m) => m.san === currentStep?.san);
 
+  const history = chess.history({ verbose: true });
+  const lastMove = history[history.length - 1];
+
   const idea = currentStep?.patternTag
     ? course.tacticalIdeas.find((t) => t.patternTag === currentStep.patternTag)
     : undefined;
@@ -172,6 +175,8 @@ export function LessonView({ course, lessonIndex, onExit, onNextLesson }: Props)
           orientation={course.playerColor}
           arrowFrom={target?.from}
           arrowTo={target?.to}
+          lastMoveFrom={lastMove?.from}
+          lastMoveTo={lastMove?.to}
         />
 
         <div className="side-panel">

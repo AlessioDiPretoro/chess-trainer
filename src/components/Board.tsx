@@ -9,9 +9,21 @@ type Props = {
   arrowFrom?: string;
   arrowTo?: string;
   highlightSquares?: Record<string, string>;
+  /** Casella di partenza e arrivo dell'ultima mossa giocata, evidenziate come su chess.com/lichess. */
+  lastMoveFrom?: string;
+  lastMoveTo?: string;
 };
 
-export function Board({ fen, onPieceDrop, orientation = "white", arrowFrom, arrowTo, highlightSquares }: Props) {
+export function Board({
+  fen,
+  onPieceDrop,
+  orientation = "white",
+  arrowFrom,
+  arrowTo,
+  highlightSquares,
+  lastMoveFrom,
+  lastMoveTo,
+}: Props) {
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [fenAtSelection, setFenAtSelection] = useState(fen);
 
@@ -50,6 +62,9 @@ export function Board({ fen, onPieceDrop, orientation = "white", arrowFrom, arro
   }
 
   const squareStyles: Record<string, React.CSSProperties> = {};
+  if (lastMoveFrom) squareStyles[lastMoveFrom] = { backgroundColor: "rgba(245, 165, 36, 0.35)" };
+  if (lastMoveTo) squareStyles[lastMoveTo] = { backgroundColor: "rgba(245, 165, 36, 0.35)" };
+
   if (highlightSquares) {
     for (const [square, color] of Object.entries(highlightSquares)) {
       squareStyles[square] = { boxShadow: `inset 0 0 0 3px ${color}` };

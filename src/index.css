@@ -310,6 +310,25 @@ a {
   color: var(--text-muted);
 }
 
+.move-nav {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.move-nav-btn {
+  border: none;
+  border-radius: 0;
+  padding: 10px 16px;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.move-nav-btn:first-child {
+  border-right: 1px solid var(--border);
+}
+
 .move-quality-best { color: var(--accent); font-size: 0.85rem; font-weight: 600; }
 .move-quality-good { color: var(--text-muted); font-size: 0.85rem; }
 .move-quality-inaccuracy { color: var(--warning); font-size: 0.85rem; font-weight: 600; }

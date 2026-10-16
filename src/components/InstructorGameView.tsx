@@ -39,6 +39,7 @@ export function InstructorGameView({ onExit }: Props) {
   const [reviewResult, setReviewResult] = useState<GameReviewResult | null>(null);
   const [reviewing, setReviewing] = useState(false);
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number } | null>(null);
+  const [redoStack, setRedoStack] = useState<string[][]>([]);
 
   useEffect(() => {
     const engine = new StockfishEngine();
@@ -152,6 +153,7 @@ export function InstructorGameView({ onExit }: Props) {
     setFen(chess.fen());
     updateStatusText();
     updateCommentary();
+    setRedoStack([]);
 
     if (chess.isGameOver()) {
       void finishGameOver();
@@ -203,8 +205,13 @@ export function InstructorGameView({ onExit }: Props) {
   function undoLastRound() {
     if (thinking || chess.history().length === 0) return;
     const toUndo = chess.turn() === "w" ? 2 : 1;
+    const undone: string[] = [];
     for (let i = 0; i < toUndo && chess.history().length > 0; i++) {
-      chess.undo();
+      const move = chess.undo();
+      if (move) undone.unshift(move.san);
+    }
+    if (undone.length > 0) {
+      setRedoStack((stack) => [...stack, undone]);
     }
     setFen(chess.fen());
     setGameOver(false);
@@ -213,6 +220,21 @@ export function InstructorGameView({ onExit }: Props) {
     exitedAnnouncedRef.current = false;
     updateStatusText();
     updateCommentary();
+  }
+
+  function redoLastRound() {
+    if (thinking || redoStack.length === 0) return;
+    const next = redoStack[redoStack.length - 1];
+    for (const san of next) {
+      chess.move(san);
+    }
+    setRedoStack((stack) => stack.slice(0, -1));
+    setFen(chess.fen());
+    updateStatusText();
+    updateCommentary();
+    if (chess.isGameOver()) {
+      setGameOver(true);
+    }
   }
 
   const canSuggest = ready && !gameOver && !thinking && !pendingPromotion && chess.turn() === "w";
@@ -229,6 +251,9 @@ export function InstructorGameView({ onExit }: Props) {
     ? chess.moves({ verbose: true }).find((m) => m.san === hoveredSan)
     : undefined;
 
+  const playedHistory = chess.history({ verbose: true });
+  const lastMove = playedHistory[playedHistory.length - 1];
+
   function newGame() {
     setGameKey((k) => k + 1);
     setStatus("Il tuo turno (bianco)");
@@ -238,6 +263,7 @@ export function InstructorGameView({ onExit }: Props) {
     setHoveredSan(null);
     setReviewResult(null);
     setReviewing(false);
+    setRedoStack([]);
   }
 
   async function startReview() {
@@ -274,6 +300,8 @@ export function InstructorGameView({ onExit }: Props) {
           orientation="white"
           arrowFrom={hoveredMove?.from}
           arrowTo={hoveredMove?.to}
+          lastMoveFrom={lastMove?.from}
+          lastMoveTo={lastMove?.to}
         />
 
         <div className="side-panel">
@@ -358,9 +386,26 @@ export function InstructorGameView({ onExit }: Props) {
             <p className="status-line">{status}</p>
             <p className="meta">Livello {difficulty}/20</p>
             <div className="btn-row">
-              <button className="btn" onClick={undoLastRound} disabled={thinking || chess.history().length === 0}>
-                Annulla ultima mossa
-              </button>
+              <div className="move-nav">
+                <button
+                  className="btn move-nav-btn"
+                  onClick={undoLastRound}
+                  disabled={thinking || chess.history().length === 0}
+                  title="Mossa precedente"
+                  aria-label="Mossa precedente"
+                >
+                  ◄
+                </button>
+                <button
+                  className="btn move-nav-btn"
+                  onClick={redoLastRound}
+                  disabled={thinking || redoStack.length === 0}
+                  title="Mossa successiva"
+                  aria-label="Mossa successiva"
+                >
+                  ►
+                </button>
+              </div>
               <button className="btn" onClick={newGame}>
                 Nuova partita
               </button>
