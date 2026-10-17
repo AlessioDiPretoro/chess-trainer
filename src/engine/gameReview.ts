@@ -4,7 +4,11 @@ import type { GameReviewResult, MoveReview, TurningPoint } from "../types/gameRe
 import { buildMoveComment, classifyQuality, signedScore, uciToVerboseMove } from "./moveExplanation";
 import type { StockfishEngine } from "./stockfish";
 
-const REVIEW_DEPTH = 14;
+// Tempo massimo per posizione, non profondità fissa: così il tempo totale della
+// revisione resta prevedibile indipendentemente da quanto sono complesse le singole
+// posizioni (una profondità fissa come 14 può richiedere anche >1s a posizione nel
+// mediogioco, rendendo una partita di 90 mosse lenta in modo imprevedibile).
+const REVIEW_MOVETIME_MS = 350;
 
 function accuracyLabel(acpl: number): string {
   if (acpl <= 20) return "Eccellente";
@@ -29,14 +33,13 @@ export async function reviewGame(
   onProgress?: (done: number, total: number) => void
 ): Promise<GameReviewResult> {
   const chess = new Chess();
-  const depth = REVIEW_DEPTH;
   const initialFen = chess.fen();
 
   const positions: { fen: string; scoreCp?: number; scoreMate?: number; bestMove: string }[] = [];
-  positions.push({ fen: chess.fen(), ...(await engine.analyze(chess.fen(), depth)) });
+  positions.push({ fen: chess.fen(), ...(await engine.analyzeByTime(chess.fen(), REVIEW_MOVETIME_MS)) });
   for (const san of movesSan) {
     chess.move(san);
-    positions.push({ fen: chess.fen(), ...(await engine.analyze(chess.fen(), depth)) });
+    positions.push({ fen: chess.fen(), ...(await engine.analyzeByTime(chess.fen(), REVIEW_MOVETIME_MS)) });
     onProgress?.(positions.length - 1, movesSan.length);
   }
 

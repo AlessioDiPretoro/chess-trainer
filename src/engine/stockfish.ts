@@ -59,8 +59,7 @@ export class StockfishEngine {
     });
   }
 
-  /** Analizza una posizione e restituisce la mossa migliore con la relativa valutazione. */
-  async analyze(fen: string, depth = 12): Promise<EngineAnalysis> {
+  private runGo(fen: string, goCommand: string): Promise<EngineAnalysis> {
     return this.enqueue(async () => {
       await this.readyPromise;
       return new Promise<EngineAnalysis>((resolve) => {
@@ -89,9 +88,23 @@ export class StockfishEngine {
 
         this.worker.addEventListener("message", onMessage);
         this.worker.postMessage(`position fen ${fen}`);
-        this.worker.postMessage(`go depth ${depth}`);
+        this.worker.postMessage(goCommand);
       });
     });
+  }
+
+  /** Analizza una posizione a profondità fissa e restituisce la mossa migliore con la relativa valutazione. */
+  async analyze(fen: string, depth = 12): Promise<EngineAnalysis> {
+    return this.runGo(fen, `go depth ${depth}`);
+  }
+
+  /**
+   * Come `analyze`, ma con un tempo massimo invece di una profondità fissa: utile per
+   * analisi in batch (es. la revisione di un'intera partita), dove un tempo totale
+   * prevedibile conta più della profondità esatta raggiunta in ogni posizione.
+   */
+  async analyzeByTime(fen: string, movetimeMs: number): Promise<EngineAnalysis> {
+    return this.runGo(fen, `go movetime ${movetimeMs}`);
   }
 
   async getBestMove(fen: string, depth = 12): Promise<EngineAnalysis> {
