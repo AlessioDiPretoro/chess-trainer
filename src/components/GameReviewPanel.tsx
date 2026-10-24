@@ -28,18 +28,6 @@ export function GameReviewPanel({ result, currentIndex, onSelectIndex }: Props) 
 
   return (
     <div className="card explanation-card">
-      <h3>Revisione partita</h3>
-      {result.openingName && (
-        <p className="status-line">
-          Apertura riconosciuta: <strong>{result.openingName}</strong>
-        </p>
-      )}
-      <p className="status-line">
-        Precisione media: <strong>{result.playerAccuracyLabel}</strong> (perdita media di circa{" "}
-        {(result.playerAverageCentipawnLoss / 100).toFixed(2)} pedoni a mossa)
-      </p>
-      <p className="status-line">Usa le frecce ◄ ► sotto la scacchiera per scorrere le mosse della partita.</p>
-
       <div className={`card deviation-banner ${currentMove && (currentMove.quality === "best" || currentMove.quality === "good") ? "good" : ""}`}>
         {currentMove ? (
           <>
@@ -95,6 +83,18 @@ export function GameReviewPanel({ result, currentIndex, onSelectIndex }: Props) 
           </div>
         ))}
       </div>
+
+      <h3>Riepilogo</h3>
+      {result.openingName && (
+        <p className="status-line">
+          Apertura riconosciuta: <strong>{result.openingName}</strong>
+        </p>
+      )}
+      <p className="status-line">
+        Precisione media: <strong>{result.playerAccuracyLabel}</strong> (perdita media di circa{" "}
+        {(result.playerAverageCentipawnLoss / 100).toFixed(2)} pedoni a mossa)
+      </p>
+      <p className="status-line">Usa le frecce ◄ ► sotto la scacchiera per scorrere le mosse della partita.</p>
     </div>
   );
 }

@@ -161,8 +161,6 @@ export function InstructorGameView({ onExit }: Props) {
   async function continueWithOpponentMove() {
     setThinking(true);
     const engine = engineRef.current;
-    const fenBeforeMove = chess.fen();
-    const moverColor = chess.turn();
     try {
       if (engine) {
         // Preferisce restare in uno schema noto quando può: altrimenti l'avversario,
@@ -191,7 +189,10 @@ export function InstructorGameView({ onExit }: Props) {
         }
         setFen(chess.fen());
         updateStatusText();
-        await commentOnMove(fenBeforeMove, move, moverColor);
+        // Niente analisi col motore per la mossa dell'avversario: non ci serve valutarla
+        // dal vivo (lo facciamo solo nella revisione di fine partita), e risparmiamo due
+        // chiamate al motore per round, rendendo l'avversario anche più reattivo.
+        refreshOpeningOnly();
       }
     } catch (error) {
       console.error("Errore nella mossa dell'avversario:", error);
@@ -428,10 +429,12 @@ export function InstructorGameView({ onExit }: Props) {
         </div>
 
         <div className="side-panel">
-          <div className="card explanation-card instructor-card">
-            <h3>Istruttore</h3>
-            <p>{comment}</p>
-          </div>
+          {!inReview && (
+            <div className="card explanation-card instructor-card">
+              <h3>Istruttore</h3>
+              <p>{comment}</p>
+            </div>
+          )}
 
           {hintLoading && <p className="status-line">Calcolo il suggerimento…</p>}
 
@@ -514,10 +517,12 @@ export function InstructorGameView({ onExit }: Props) {
             </div>
           )}
 
-          <div className="card">
-            <p className="status-line">{status}</p>
-            <p className="meta">Livello {difficulty}/20</p>
-          </div>
+          {!inReview && (
+            <div className="card">
+              <p className="status-line">{status}</p>
+              <p className="meta">Livello {difficulty}/20</p>
+            </div>
+          )}
 
           {pendingPromotion && (
             <PromotionPicker onChoose={resolvePromotion} onCancel={() => setPendingPromotion(null)} />

@@ -103,7 +103,7 @@ a {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 20px;
+  padding: 14px 18px;
 }
 
 .course-card {
@@ -417,7 +417,7 @@ a {
   }
 
   .card {
-    padding: 14px;
+    padding: 10px 14px;
   }
 
   h1 { font-size: 1.4rem; }

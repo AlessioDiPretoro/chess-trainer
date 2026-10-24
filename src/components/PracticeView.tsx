@@ -393,12 +393,14 @@ export function PracticeView({ course, onExit }: Props) {
         </div>
 
         <div className="side-panel">
-          <div className="card">
-            <p className="status-line">{status}</p>
-            <p className="meta">
-              Livello {difficulty}/20 · {deviations} deviazion{deviations === 1 ? "e" : "i"} dal piano
-            </p>
-          </div>
+          {!inReview && (
+            <div className="card">
+              <p className="status-line">{status}</p>
+              <p className="meta">
+                Livello {difficulty}/20 · {deviations} deviazion{deviations === 1 ? "e" : "i"} dal piano
+              </p>
+            </div>
+          )}
 
           {pendingPromotion && (
             <PromotionPicker onChoose={resolvePromotion} onCancel={() => setPendingPromotion(null)} />
@@ -413,7 +415,7 @@ export function PracticeView({ course, onExit }: Props) {
             </div>
           )}
 
-          {banner && (
+          {banner && !inReview && (
             <div className={`card deviation-banner ${banner.kind === "good" ? "good" : ""}`}>
               <p>{banner.text}</p>
             </div>
