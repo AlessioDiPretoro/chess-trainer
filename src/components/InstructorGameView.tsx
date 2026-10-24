@@ -22,6 +22,7 @@ type Props = {
 type PendingPromotion = { from: Square; to: Square } | null;
 
 const INSTRUCTOR_GAME_ID = "instructor-game";
+const NO_PATTERN_TEXT = "Nessuno schema particolare da segnalare qui.";
 
 export function InstructorGameView({ onExit }: Props) {
   const [gameKey, setGameKey] = useState(0);
@@ -308,7 +309,7 @@ export function InstructorGameView({ onExit }: Props) {
   /** Per annulla/ripeti: aggiorna solo l'indicazione dello schema, senza rianalizzare la mossa col motore. */
   function refreshOpeningOnly() {
     const prefix = openingPrefix();
-    setComment(prefix.trim() || "Nessuno schema particolare da segnalare qui.");
+    setComment(prefix.trim() || NO_PATTERN_TEXT);
   }
 
   function redoLastRound() {
@@ -419,7 +420,7 @@ export function InstructorGameView({ onExit }: Props) {
   const boardFen = inReview ? (reviewMove ? reviewMove.fenAfter : reviewResult.initialFen) : fen;
 
   useEffect(() => {
-    if (voiceEnabled && !inReview) speakText(comment);
+    if (voiceEnabled && !inReview && comment !== NO_PATTERN_TEXT) speakText(comment);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comment, voiceEnabled, inReview]);
 
