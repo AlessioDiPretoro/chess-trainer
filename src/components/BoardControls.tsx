@@ -10,9 +10,23 @@ type Props = {
   /** Se presente, mostra il pulsante "Suggerimento" di fianco alle frecce. */
   onHint?: () => void;
   hintDisabled?: boolean;
+  /** Se presente, mostra il pulsante per attivare/disattivare la voce dell'istruttore. */
+  onToggleVoice?: () => void;
+  voiceEnabled?: boolean;
 };
 
-export function BoardControls({ onUndo, onRedo, canUndo, canRedo, onRematch, onExit, onHint, hintDisabled }: Props) {
+export function BoardControls({
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
+  onRematch,
+  onExit,
+  onHint,
+  hintDisabled,
+  onToggleVoice,
+  voiceEnabled,
+}: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +72,16 @@ export function BoardControls({ onUndo, onRedo, canUndo, canRedo, onRematch, onE
       </div>
 
       <div className="board-controls-right">
+        {onToggleVoice && (
+          <button
+            className="btn"
+            onClick={onToggleVoice}
+            title={voiceEnabled ? "Disattiva la voce dell'istruttore" : "Attiva la voce dell'istruttore"}
+            aria-label="Voce dell'istruttore"
+          >
+            {voiceEnabled ? "🔊" : "🔇"}
+          </button>
+        )}
         {onHint && (
           <button className="btn" onClick={onHint} disabled={hintDisabled} title="Suggerimento" aria-label="Suggerimento">
             💡 Suggerimento

@@ -4,6 +4,8 @@ export type AppSettings = {
   id: "app";
   /** Livello di difficoltà dell'avversario, 0-20 (mappato sulla Skill Level di Stockfish). */
   difficulty: number;
+  /** Se true, i commenti dell'istruttore vengono letti ad alta voce. */
+  voiceEnabled?: boolean;
 };
 
 export type CourseProgress = {
@@ -46,6 +48,16 @@ export async function getDifficulty(): Promise<number> {
 
 export async function setDifficulty(difficulty: number): Promise<void> {
   await db.settings.put({ id: "app", difficulty });
+}
+
+export async function getVoiceEnabled(): Promise<boolean> {
+  const settings = await db.settings.get("app");
+  return settings?.voiceEnabled ?? false;
+}
+
+export async function setVoiceEnabled(voiceEnabled: boolean): Promise<void> {
+  const current = await db.settings.get("app");
+  await db.settings.put({ id: "app", difficulty: current?.difficulty ?? 5, voiceEnabled });
 }
 
 export async function getCourseProgress(courseId: string): Promise<CourseProgress> {

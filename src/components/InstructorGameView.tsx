@@ -1,9 +1,10 @@
 import { Chess, type Square } from "chess.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { lookupOpeningName, suggestKnownMoves, suggestStyleIdeas } from "../data/openingNames";
-import { getDifficulty, recordGame } from "../db/db";
+import { getDifficulty, getVoiceEnabled, recordGame, setVoiceEnabled } from "../db/db";
 import { reviewGame } from "../engine/gameReview";
 import { buildMoveComment, classifyQuality, signedScore, uciToVerboseMove } from "../engine/moveExplanation";
+import { speakText, stopSpeaking } from "../engine/speech";
 import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
 import type { GameReviewResult } from "../types/gameReview";
 import { Board } from "./Board";
@@ -45,6 +46,21 @@ export function InstructorGameView({ onExit }: Props) {
   const [reviewMoveIndex, setReviewMoveIndex] = useState(-1);
   const [hint, setHint] = useState<{ san: string; comment: string; from: string; to: string } | null>(null);
   const [hintLoading, setHintLoading] = useState(false);
+  const [voiceEnabled, setVoiceEnabledState] = useState(false);
+
+  useEffect(() => {
+    getVoiceEnabled().then(setVoiceEnabledState);
+    return () => stopSpeaking();
+  }, []);
+
+  function toggleVoice() {
+    setVoiceEnabledState((enabled) => {
+      const next = !enabled;
+      void setVoiceEnabled(next);
+      if (!next) stopSpeaking();
+      return next;
+    });
+  }
 
   useEffect(() => {
     const engine = new StockfishEngine();
@@ -396,6 +412,16 @@ export function InstructorGameView({ onExit }: Props) {
   const reviewMove = inReview && reviewMoveIndex >= 0 ? reviewResult.moves[reviewMoveIndex] : null;
   const boardFen = inReview ? (reviewMove ? reviewMove.fenAfter : reviewResult.initialFen) : fen;
 
+  useEffect(() => {
+    if (voiceEnabled && !inReview) speakText(comment);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comment, voiceEnabled, inReview]);
+
+  useEffect(() => {
+    if (voiceEnabled && inReview && reviewMove) speakText(reviewMove.comment);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reviewMove, voiceEnabled, inReview]);
+
   return (
     <div className="app-shell">
       <div className="top-bar">
@@ -425,6 +451,8 @@ export function InstructorGameView({ onExit }: Props) {
             onExit={onExit}
             onHint={inReview ? undefined : showHint}
             hintDisabled={!ready || gameOver || thinking || !!pendingPromotion || hintLoading || chess.turn() !== "w"}
+            onToggleVoice={toggleVoice}
+            voiceEnabled={voiceEnabled}
           />
         </div>
 
