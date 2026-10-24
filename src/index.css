@@ -410,6 +410,72 @@ a {
   font-size: 0.95rem;
 }
 
+.game-end-banner {
+  width: min(70vw, 440px);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  animation: game-end-banner-in 0.25s ease-out;
+}
+
+.game-end-banner-icon {
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+.game-end-banner h2 {
+  margin: 0 0 2px;
+  font-size: 1.25rem;
+}
+
+.game-end-banner p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.game-end-banner--win {
+  border-color: var(--accent);
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.game-end-banner--win h2 {
+  color: var(--accent);
+}
+
+.game-end-banner--loss {
+  border-color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.game-end-banner--loss h2 {
+  color: var(--danger);
+}
+
+.game-end-banner--draw {
+  border-color: var(--warning);
+  background: rgba(245, 165, 36, 0.1);
+}
+
+.game-end-banner--draw h2 {
+  color: var(--warning);
+}
+
+@keyframes game-end-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 600px) {
   .app-shell {
     padding: 16px 12px 48px;
@@ -431,6 +497,16 @@ a {
   .board-controls {
     width: min(92vw, 420px);
     margin: 0 auto;
+  }
+
+  .game-end-banner {
+    width: min(92vw, 420px);
+    margin: 0 auto;
+    padding: 12px 16px;
+  }
+
+  .game-end-banner-icon {
+    font-size: 2rem;
   }
 
   .board-layout {

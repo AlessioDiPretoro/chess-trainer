@@ -2,7 +2,7 @@ import { Chess, type Square } from "chess.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { lookupOpeningName, suggestKnownMoves, suggestStyleIdeas } from "../data/openingNames";
 import { getDifficulty, getVoiceEnabled, recordGame, setVoiceEnabled } from "../db/db";
-import { describeGameEnd, outcomeLabel, type GameEndInfo } from "../engine/gameEnd";
+import { describeGameEnd, type GameEndInfo } from "../engine/gameEnd";
 import { reviewGame } from "../engine/gameReview";
 import { buildMoveComment, classifyQuality, signedScore, uciToVerboseMove } from "../engine/moveExplanation";
 import { speakText, stopSpeaking } from "../engine/speech";
@@ -11,6 +11,7 @@ import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
 import type { GameReviewResult } from "../types/gameReview";
 import { Board } from "./Board";
 import { BoardControls } from "./BoardControls";
+import { GameEndBanner } from "./GameEndBanner";
 import { GameReviewPanel } from "./GameReviewPanel";
 import { MoveList } from "./MoveList";
 import { PromotionPicker, type PromotionPiece } from "./PromotionPicker";
@@ -441,6 +442,7 @@ export function InstructorGameView({ onExit }: Props) {
 
       <div className="board-layout">
         <div className="board-column">
+          {gameOver && !reviewResult && endInfo && <GameEndBanner endInfo={endInfo} />}
           <Board
             fen={boardFen}
             onPieceDrop={onPieceDrop}
@@ -566,8 +568,7 @@ export function InstructorGameView({ onExit }: Props) {
 
           {gameOver && !reviewResult && (
             <div className="card explanation-card">
-              <h3>Partita finita{endInfo ? `: ${outcomeLabel(endInfo.outcome)}` : ""}</h3>
-              {endInfo && <p className="status-line">{endInfo.reason}</p>}
+              <h3>Partita finita</h3>
               <p>Puoi iniziarne un'altra quando vuoi, anche con un'apertura diversa.</p>
               <div className="btn-row">
                 <button className="btn btn-primary" onClick={startReview} disabled={reviewing}>

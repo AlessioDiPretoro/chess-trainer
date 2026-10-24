@@ -2,7 +2,7 @@ import { Chess, type Square } from "chess.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getDifficulty, getVoiceEnabled, recordGame, setVoiceEnabled } from "../db/db";
 import { countDeviations, playerStartIndex } from "../engine/deviations";
-import { describeGameEnd, outcomeLabel, type GameEndInfo } from "../engine/gameEnd";
+import { describeGameEnd, type GameEndInfo } from "../engine/gameEnd";
 import { reviewGame } from "../engine/gameReview";
 import { buildMoveComment } from "../engine/moveExplanation";
 import { playOpponentMove } from "../engine/opponent";
@@ -13,6 +13,7 @@ import type { Course } from "../types/course";
 import type { GameReviewResult } from "../types/gameReview";
 import { Board } from "./Board";
 import { BoardControls } from "./BoardControls";
+import { GameEndBanner } from "./GameEndBanner";
 import { GameReviewPanel } from "./GameReviewPanel";
 import { MoveList } from "./MoveList";
 import { PromotionPicker, type PromotionPiece } from "./PromotionPicker";
@@ -402,6 +403,7 @@ export function PracticeView({ course, onExit }: Props) {
 
       <div className="board-layout">
         <div className="board-column">
+          {gameOver && !reviewResult && endInfo && <GameEndBanner endInfo={endInfo} />}
           <Board
             fen={boardFen}
             onPieceDrop={onPieceDrop}
@@ -456,8 +458,7 @@ export function PracticeView({ course, onExit }: Props) {
 
           {gameOver && !reviewResult && (
             <div className="card explanation-card">
-              <h3>Partita finita{endInfo ? `: ${outcomeLabel(endInfo.outcome)}` : ""}</h3>
-              {endInfo && <p className="status-line">{endInfo.reason}</p>}
+              <h3>Partita finita</h3>
               <p>Risultato salvato nello storico. Puoi iniziarne un'altra quando vuoi.</p>
               <div className="btn-row">
                 <button className="btn btn-primary" onClick={startReview} disabled={reviewing}>
