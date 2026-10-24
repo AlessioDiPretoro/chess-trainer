@@ -2,10 +2,12 @@ import { Chess, type Square } from "chess.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getDifficulty, getVoiceEnabled, recordGame, setVoiceEnabled } from "../db/db";
 import { countDeviations, playerStartIndex } from "../engine/deviations";
+import { describeGameEnd, outcomeLabel, type GameEndInfo } from "../engine/gameEnd";
 import { reviewGame } from "../engine/gameReview";
 import { buildMoveComment } from "../engine/moveExplanation";
 import { playOpponentMove } from "../engine/opponent";
 import { speakText, stopSpeaking } from "../engine/speech";
+import { playGameEndSound } from "../engine/sound";
 import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
 import type { Course } from "../types/course";
 import type { GameReviewResult } from "../types/gameReview";
@@ -31,7 +33,6 @@ function yourTurnLabel(color: "white" | "black"): string {
 
 export function PracticeView({ course, onExit }: Props) {
   const playerLetter = course.playerColor === "white" ? "w" : "b";
-  const opponentLetter = playerLetter === "w" ? "b" : "w";
 
   const [gameKey, setGameKey] = useState(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- gameKey intentionally forces a fresh Chess() on "new game"
@@ -43,6 +44,7 @@ export function PracticeView({ course, onExit }: Props) {
   const [banner, setBanner] = useState<Banner>(null);
   const [deviations, setDeviations] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [endInfo, setEndInfo] = useState<GameEndInfo | null>(null);
   const [difficulty, setDifficultyState] = useState(5);
   const [thinking, setThinking] = useState(false);
   const [ready, setReady] = useState(false);
@@ -113,13 +115,14 @@ export function PracticeView({ course, onExit }: Props) {
   }
 
   async function finishGameOver() {
-    const loser = chess.isCheckmate() ? chess.turn() : null;
-    const result: "win" | "loss" | "draw" = loser === playerLetter ? "loss" : loser === opponentLetter ? "win" : "draw";
+    const info = describeGameEnd(chess, playerLetter);
     setGameOver(true);
+    setEndInfo(info);
+    playGameEndSound(info.outcome);
     await recordGame({
       courseId: course.id,
       difficulty,
-      result,
+      result: info.outcome,
       movesSan: chess.history(),
       deviations: countDeviations(chess.history(), course.plan, course.playerColor),
       playedAt: Date.now(),
@@ -274,6 +277,7 @@ export function PracticeView({ course, onExit }: Props) {
     }
     setFen(chess.fen());
     setGameOver(false);
+    setEndInfo(null);
     setBanner(null);
     setPendingPromotion(null);
     setReviewResult(null);
@@ -297,6 +301,7 @@ export function PracticeView({ course, onExit }: Props) {
     updateStatusText();
     if (chess.isGameOver()) {
       setGameOver(true);
+      setEndInfo(describeGameEnd(chess, playerLetter));
     }
   }
 
@@ -306,6 +311,7 @@ export function PracticeView({ course, onExit }: Props) {
     setBanner(null);
     setDeviations(0);
     setGameOver(false);
+    setEndInfo(null);
     setPendingPromotion(null);
     setReviewResult(null);
     setReviewMoveIndex(-1);
@@ -451,7 +457,8 @@ export function PracticeView({ course, onExit }: Props) {
 
           {gameOver && !reviewResult && (
             <div className="card explanation-card">
-              <h3>Partita finita</h3>
+              <h3>Partita finita{endInfo ? `: ${outcomeLabel(endInfo.outcome)}` : ""}</h3>
+              {endInfo && <p className="status-line">{endInfo.reason}</p>}
               <p>Risultato salvato nello storico. Puoi iniziarne un'altra quando vuoi.</p>
               <div className="btn-row">
                 <button className="btn btn-primary" onClick={startReview} disabled={reviewing}>

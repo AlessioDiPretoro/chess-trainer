@@ -2,9 +2,11 @@ import { Chess, type Square } from "chess.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { lookupOpeningName, suggestKnownMoves, suggestStyleIdeas } from "../data/openingNames";
 import { getDifficulty, getVoiceEnabled, recordGame, setVoiceEnabled } from "../db/db";
+import { describeGameEnd, outcomeLabel, type GameEndInfo } from "../engine/gameEnd";
 import { reviewGame } from "../engine/gameReview";
 import { buildMoveComment, classifyQuality, signedScore, uciToVerboseMove } from "../engine/moveExplanation";
 import { speakText, stopSpeaking } from "../engine/speech";
+import { playGameEndSound } from "../engine/sound";
 import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
 import type { GameReviewResult } from "../types/gameReview";
 import { Board } from "./Board";
@@ -47,6 +49,7 @@ export function InstructorGameView({ onExit }: Props) {
   const [hint, setHint] = useState<{ san: string; comment: string; from: string; to: string } | null>(null);
   const [hintLoading, setHintLoading] = useState(false);
   const [voiceEnabled, setVoiceEnabledState] = useState(false);
+  const [endInfo, setEndInfo] = useState<GameEndInfo | null>(null);
 
   useEffect(() => {
     getVoiceEnabled().then(setVoiceEnabledState);
@@ -161,13 +164,14 @@ export function InstructorGameView({ onExit }: Props) {
   }
 
   async function finishGameOver() {
-    const loser = chess.isCheckmate() ? chess.turn() : null;
-    const result: "win" | "loss" | "draw" = loser === "w" ? "loss" : loser === "b" ? "win" : "draw";
+    const info = describeGameEnd(chess, "w");
     setGameOver(true);
+    setEndInfo(info);
+    playGameEndSound(info.outcome);
     await recordGame({
       courseId: INSTRUCTOR_GAME_ID,
       difficulty,
-      result,
+      result: info.outcome,
       movesSan: chess.history(),
       deviations: 0,
       playedAt: Date.now(),
@@ -292,6 +296,7 @@ export function InstructorGameView({ onExit }: Props) {
     }
     setFen(chess.fen());
     setGameOver(false);
+    setEndInfo(null);
     setPendingPromotion(null);
     setReviewResult(null);
     setReviewMoveIndex(-1);
@@ -320,6 +325,7 @@ export function InstructorGameView({ onExit }: Props) {
     setHint(null);
     if (chess.isGameOver()) {
       setGameOver(true);
+      setEndInfo(describeGameEnd(chess, "w"));
     }
   }
 
@@ -345,6 +351,7 @@ export function InstructorGameView({ onExit }: Props) {
     setStatus("Il tuo turno (bianco)");
     setComment("Fai la tua prima mossa: l'istruttore commenterà che apertura stai giocando.");
     setGameOver(false);
+    setEndInfo(null);
     setPendingPromotion(null);
     setHoveredSan(null);
     setReviewResult(null);
@@ -558,7 +565,8 @@ export function InstructorGameView({ onExit }: Props) {
 
           {gameOver && !reviewResult && (
             <div className="card explanation-card">
-              <h3>Partita finita</h3>
+              <h3>Partita finita{endInfo ? `: ${outcomeLabel(endInfo.outcome)}` : ""}</h3>
+              {endInfo && <p className="status-line">{endInfo.reason}</p>}
               <p>Puoi iniziarne un'altra quando vuoi, anche con un'apertura diversa.</p>
               <div className="btn-row">
                 <button className="btn btn-primary" onClick={startReview} disabled={reviewing}>
