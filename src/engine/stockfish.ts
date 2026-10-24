@@ -14,10 +14,20 @@ export function engineDepthFor(difficulty: number): number {
  */
 const OPPONENT_MOVETIME_MS = 800;
 
-const MIN_ELO = 1320;
+const MIN_ELO = 600;
 const MAX_ELO = 3190;
 
-/** Elo stimato (1320-3190, il range supportato da Stockfish) per un livello di difficoltà 0-20. */
+/**
+ * Elo "reale" minimo che Stockfish accetta per UCI_Elo: sotto questa soglia il motore da
+ * solo non scende (la calibrazione interna di Stockfish non va più in basso). Per le
+ * difficoltà mappate su un Elo stimato più basso (vedi `eloFor`), il motore viene comunque
+ * tenuto a questo floor e la debolezza aggiuntiva viene simulata altrove (vedi
+ * `pickOpponentMove` in opponent.ts, che aggiunge mosse casuali con probabilità crescente
+ * quanto più l'Elo stimato scende sotto questa soglia).
+ */
+export const ENGINE_ELO_FLOOR = 1320;
+
+/** Elo stimato (600-3190) per un livello di difficoltà 0-20: sotto 1320 è "intento", non quello che Stockfish gioca da solo. */
 export function eloFor(difficulty: number): number {
   const clamped = Math.max(0, Math.min(20, difficulty));
   return Math.round(MIN_ELO + (clamped / 20) * (MAX_ELO - MIN_ELO));
@@ -88,7 +98,7 @@ export class StockfishEngine {
         this.worker.postMessage("setoption name UCI_LimitStrength value false");
       } else {
         this.worker.postMessage("setoption name UCI_LimitStrength value true");
-        this.worker.postMessage(`setoption name UCI_Elo value ${eloFor(clamped)}`);
+        this.worker.postMessage(`setoption name UCI_Elo value ${Math.max(ENGINE_ELO_FLOOR, eloFor(clamped))}`);
       }
     });
   }

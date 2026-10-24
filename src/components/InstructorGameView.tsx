@@ -5,6 +5,7 @@ import { getDifficulty, getVoiceEnabled, recordGame, setVoiceEnabled } from "../
 import { describeGameEnd, type GameEndInfo } from "../engine/gameEnd";
 import { reviewGame } from "../engine/gameReview";
 import { buildMoveComment, classifyQuality, signedScore, uciToVerboseMove } from "../engine/moveExplanation";
+import { pickOpponentMove } from "../engine/opponent";
 import { speakText, stopSpeaking } from "../engine/speech";
 import { playGameEndSound } from "../engine/sound";
 import { engineDepthFor, StockfishEngine } from "../engine/stockfish";
@@ -197,12 +198,8 @@ export function InstructorGameView({ onExit }: Props) {
           const san = pool[Math.floor(Math.random() * pool.length)].san;
           move = chess.move(san);
         } else {
-          const { bestMove } = await engine.getOpponentMove(chess.fen(), difficulty);
-          move = chess.move({
-            from: bestMove.slice(0, 2),
-            to: bestMove.slice(2, 4),
-            promotion: bestMove.slice(4, 5) || undefined,
-          });
+          const { from, to, promotion } = await pickOpponentMove(chess, engine, difficulty);
+          move = chess.move({ from, to, promotion });
         }
 
         if (!move) {
