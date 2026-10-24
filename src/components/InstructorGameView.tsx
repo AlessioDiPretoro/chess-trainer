@@ -209,10 +209,11 @@ export function InstructorGameView({ onExit }: Props) {
         }
         setFen(chess.fen());
         updateStatusText();
-        // Niente analisi col motore per la mossa dell'avversario: non ci serve valutarla
-        // dal vivo (lo facciamo solo nella revisione di fine partita), e risparmiamo due
-        // chiamate al motore per round, rendendo l'avversario anche più reattivo.
-        refreshOpeningOnly();
+        // Niente analisi col motore per la mossa dell'avversario (vedi sopra), e niente
+        // tocchi alla card/voce dell'istruttore: altrimenti la mossa dell'avversario
+        // interromperebbe a metà la narrazione (parlata o scritta) della tua mossa
+        // appena giocata. Il nome dello schema, se cambia, verrà detto alla tua prossima
+        // mossa (la cronologia a quel punto include comunque già questa risposta).
       }
     } catch (error) {
       console.error("Errore nella mossa dell'avversario:", error);
