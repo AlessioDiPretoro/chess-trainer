@@ -93,7 +93,6 @@ export function PracticeView({ course, onExit }: Props) {
       try {
         const level = await getDifficulty();
         setDifficultyState(level);
-        await engine.setSkillLevel(level);
         if (chess.turn() !== playerLetter && !chess.isGameOver()) {
           await playOpponentMove(chess, course.book, level, engine);
           setFen(chess.fen());

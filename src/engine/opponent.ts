@@ -21,8 +21,7 @@ export async function playOpponentMove(
     if (move) return move.san;
   }
 
-  await engine.setSkillLevel(difficulty);
-  const { bestMove } = await engine.getBestMove(chess.fen(), engineDepthFor(difficulty));
+  const { bestMove } = await engine.getOpponentMove(chess.fen(), difficulty);
   const move = chess.move({
     from: bestMove.slice(0, 2),
     to: bestMove.slice(2, 4),

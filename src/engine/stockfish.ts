@@ -1,7 +1,26 @@
-/** Profondità di ricerca in base alla difficoltà (0-20): da alle basse difficoltà a sfidante alle alte. */
+/** Profondità di ricerca in base alla difficoltà (0-20): usata per analisi/suggerimenti, non per la forza dell'avversario (vedi `setStrength`). */
 export function engineDepthFor(difficulty: number): number {
   const clamped = Math.max(0, Math.min(20, difficulty));
   return 8 + Math.round((clamped / 20) * 10);
+}
+
+/**
+ * Tempo di ricerca per la mossa dell'avversario: fisso e non legato alla difficoltà (così
+ * la risposta resta sempre rapida), non una profondità. La forza è calibrata via
+ * `setStrength` (UCI_Elo), pensato per funzionare con una ricerca normale: limitarla
+ * ulteriormente non la rende più debole in modo prevedibile, anzi impedisce al
+ * meccanismo di Elo di funzionare come progettato (in Stockfish "Skill Level"/profondità
+ * bassa da sole non producono gli errori "da umano" che UCI_Elo invece simula correttamente).
+ */
+const OPPONENT_MOVETIME_MS = 800;
+
+const MIN_ELO = 1320;
+const MAX_ELO = 3190;
+
+/** Elo stimato (1320-3190, il range supportato da Stockfish) per un livello di difficoltà 0-20. */
+export function eloFor(difficulty: number): number {
+  const clamped = Math.max(0, Math.min(20, difficulty));
+  return Math.round(MIN_ELO + (clamped / 20) * (MAX_ELO - MIN_ELO));
 }
 
 export type EngineAnalysis = {
@@ -51,11 +70,26 @@ export class StockfishEngine {
     return result;
   }
 
-  async setSkillLevel(level: number): Promise<void> {
+  /**
+   * Calibra la forza su un Elo stimato (UCI_LimitStrength + UCI_Elo), non sulla vecchia
+   * opzione "Skill Level": quest'ultima rende le scelte meno precise ma non produce gli
+   * errori tattici "da umano debole" che un giocatore di basso livello farebbe davvero
+   * (a livello 3 restava fortissimo). UCI_Elo è pensato apposta per questo e Stockfish lo
+   * calibra internamente, quindi va usato con una ricerca normale (`OPPONENT_SEARCH_DEPTH`),
+   * non con una profondità già ridotta. Privato: solo `getOpponentMove` lo usa, per
+   * garantire che la forza venga sempre ripristinata subito dopo, senza rischiare di
+   * lasciare "debole" il motore condiviso anche per i suggerimenti/l'analisi del giocatore.
+   */
+  private async setStrength(difficulty: number): Promise<void> {
     return this.enqueue(async () => {
       await this.readyPromise;
-      const clamped = Math.max(0, Math.min(20, level));
-      this.worker.postMessage(`setoption name Skill Level value ${clamped}`);
+      const clamped = Math.max(0, Math.min(20, difficulty));
+      if (clamped >= 20) {
+        this.worker.postMessage("setoption name UCI_LimitStrength value false");
+      } else {
+        this.worker.postMessage("setoption name UCI_LimitStrength value true");
+        this.worker.postMessage(`setoption name UCI_Elo value ${eloFor(clamped)}`);
+      }
     });
   }
 
@@ -109,6 +143,21 @@ export class StockfishEngine {
 
   async getBestMove(fen: string, depth = 12): Promise<EngineAnalysis> {
     return this.analyze(fen, depth);
+  }
+
+  /**
+   * Mossa dell'avversario calibrata sulla difficoltà: abbassa la forza solo per questa
+   * ricerca e la ripristina subito dopo (anche in caso di errore), così le chiamate
+   * successive sullo stesso motore (suggerimenti, valutazioni per i commenti/la
+   * revisione) restano sempre a piena forza.
+   */
+  async getOpponentMove(fen: string, difficulty: number): Promise<EngineAnalysis> {
+    await this.setStrength(difficulty);
+    try {
+      return await this.runGo(fen, `go movetime ${OPPONENT_MOVETIME_MS}`);
+    } finally {
+      await this.setStrength(20);
+    }
   }
 
   terminate(): void {

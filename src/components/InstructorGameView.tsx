@@ -75,7 +75,6 @@ export function InstructorGameView({ onExit }: Props) {
     getDifficulty()
       .then((level) => {
         setDifficultyState(level);
-        return engine.setSkillLevel(level);
       })
       .catch((error) => {
         console.error("Errore nell'avvio del motore:", error);
@@ -196,7 +195,7 @@ export function InstructorGameView({ onExit }: Props) {
           const san = pool[Math.floor(Math.random() * pool.length)].san;
           move = chess.move(san);
         } else {
-          const { bestMove } = await engine.getBestMove(chess.fen(), engineDepthFor(difficulty));
+          const { bestMove } = await engine.getOpponentMove(chess.fen(), difficulty);
           move = chess.move({
             from: bestMove.slice(0, 2),
             to: bestMove.slice(2, 4),

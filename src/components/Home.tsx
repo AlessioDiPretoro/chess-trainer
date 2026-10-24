@@ -8,6 +8,7 @@ import {
   type CourseProgress,
   type GameRecord,
 } from "../db/db";
+import { eloFor } from "../engine/stockfish";
 
 function difficultyLabel(level: number): string {
   if (level <= 5) return "Principiante";
@@ -98,7 +99,7 @@ export function Home({ onStartLesson, onStartPractice, onStartInstructor, onStar
             onChange={(e) => handleDifficultyChange(Number(e.target.value))}
           />
           <span className="difficulty-label">
-            {difficultyLabel(difficulty)} ({difficulty}/20)
+            {difficultyLabel(difficulty)} ({difficulty}/20{difficulty < 20 ? ` · ~${eloFor(difficulty)} Elo` : ""})
           </span>
         </div>
         <p className="status-line">
