@@ -24,10 +24,16 @@ export type GameRecord = {
   playedAt: number;
 };
 
+export type PuzzleProgress = {
+  puzzleId: string;
+  solvedAt: number;
+};
+
 class ChessTrainerDB extends Dexie {
   settings!: EntityTable<AppSettings, "id">;
   courseProgress!: EntityTable<CourseProgress, "courseId">;
   games!: EntityTable<GameRecord, "id">;
+  puzzleProgress!: EntityTable<PuzzleProgress, "puzzleId">;
 
   constructor() {
     super("chess-trainer");
@@ -35,6 +41,9 @@ class ChessTrainerDB extends Dexie {
       settings: "id",
       courseProgress: "courseId",
       games: "++id, courseId, playedAt",
+    });
+    this.version(2).stores({
+      puzzleProgress: "puzzleId",
     });
   }
 }
@@ -79,4 +88,17 @@ export async function recordGame(record: Omit<GameRecord, "id">): Promise<void> 
 export async function getRecentGames(courseId: string, limit = 10): Promise<GameRecord[]> {
   const rows = await db.games.where("courseId").equals(courseId).sortBy("playedAt");
   return rows.reverse().slice(0, limit);
+}
+
+export async function markPuzzleSolved(puzzleId: string): Promise<void> {
+  await db.puzzleProgress.put({ puzzleId, solvedAt: Date.now() });
+}
+
+export async function getSolvedPuzzleIds(): Promise<Set<string>> {
+  const rows = await db.puzzleProgress.toArray();
+  return new Set(rows.map((r) => r.puzzleId));
+}
+
+export async function getSolvedPuzzleCount(): Promise<number> {
+  return db.puzzleProgress.count();
 }

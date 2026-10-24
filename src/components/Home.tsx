@@ -20,9 +20,10 @@ type Props = {
   onStartLesson: (courseId: string, lessonIndex: number) => void;
   onStartPractice: (courseId: string) => void;
   onStartInstructor: () => void;
+  onStartPuzzles: () => void;
 };
 
-export function Home({ onStartLesson, onStartPractice, onStartInstructor }: Props) {
+export function Home({ onStartLesson, onStartPractice, onStartInstructor, onStartPuzzles }: Props) {
   const [difficulty, setDifficultyState] = useState(5);
   const [progress, setProgress] = useState<Record<string, CourseProgress>>({});
   const [games, setGames] = useState<Record<string, GameRecord[]>>({});
@@ -68,6 +69,19 @@ export function Home({ onStartLesson, onStartPractice, onStartInstructor }: Prop
         </p>
         <div className="btn-row">
           <button className="btn btn-primary" onClick={onStartInstructor}>
+            Inizia
+          </button>
+        </div>
+      </div>
+
+      <div className="card course-card">
+        <h2>Problemi</h2>
+        <p>
+          Migliaia di puzzle tattici reali (dal database di Lichess): risolvi ogni posizione trovando l'unica mossa
+          corretta. Se sbagli, l'istruttore ti spiega perché e puoi riprovare finché non trovi la soluzione giusta.
+        </p>
+        <div className="btn-row">
+          <button className="btn btn-primary" onClick={onStartPuzzles}>
             Inizia
           </button>
         </div>

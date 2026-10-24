@@ -14,6 +14,9 @@ export default defineConfig({
       workbox: {
         // il motore Stockfish (lite-single, ~1.8MB) deve entrare nella precache per funzionare offline
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // aggiunge .json alla precache di default (serve per public/puzzles.json, i puzzle tattici),
+        // mantenendo .wasm (il motore Stockfish) che altrimenti verrebbe escluso dai pattern di default
+        globPatterns: ["**/*.{js,css,html,svg,json,wasm}"],
       },
       manifest: {
         name: 'Chess Trainer',
