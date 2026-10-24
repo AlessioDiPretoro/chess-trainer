@@ -97,6 +97,28 @@ export const londonSystem: Course = {
       { san: "Bd6", weight: 3, minLevel: 0 },
       { san: "c5", weight: 2, minLevel: 6 },
     ],
+    // Dal qui in poi il piano del Bianco (Nbd2, c3, Qe2, O-O) è fisso e non si adatta
+    // a una reazione aggressiva come ...c5-c4 contro l'alfiere su d3 (che altrimenti
+    // resta indifeso e cade, e Qe2 può addirittura cadere al pedone arrivato su d3):
+    // qui scegliamo per il Nero continuazioni solide e verificate che non mettono in
+    // crisi quel piano, così le lezioni restano sicure dall'inizio alla fine.
+    "d4 d5 Nf3 Nf6 Bf4 e6 e3 Be7 Bd3": [
+      { san: "O-O", weight: 5, minLevel: 0 },
+      { san: "c5", weight: 1, minLevel: 12 },
+    ],
+    "d4 d5 Nf3 Nf6 Bf4 e6 e3 Be7 Bd3 O-O Nbd2": [
+      { san: "Nbd7", weight: 4, minLevel: 0 },
+      { san: "b6", weight: 2, minLevel: 6 },
+    ],
+    "d4 d5 Nf3 Nf6 Bf4 e6 e3 Be7 Bd3 O-O Nbd2 Nbd7 c3": [
+      { san: "b6", weight: 4, minLevel: 0 },
+      { san: "Re8", weight: 2, minLevel: 6 },
+    ],
+    "d4 d5 Nf3 Nf6 Bf4 e6 e3 Be7 Bd3 O-O Nbd2 Nbd7 c3 b6 Qe2": [
+      { san: "Bb7", weight: 4, minLevel: 0 },
+      { san: "Re8", weight: 2, minLevel: 6 },
+    ],
+    "d4 d5 Nf3 Nf6 Bf4 e6 e3 Be7 Bd3 O-O Nbd2 Nbd7 c3 b6 Qe2 Bb7 O-O": [{ san: "Re8", weight: 3, minLevel: 0 }],
   },
   tacticalIdeas: [
     {

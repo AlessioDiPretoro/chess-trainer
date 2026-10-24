@@ -92,6 +92,24 @@ export const kingsIndianAttack: Course = {
       { san: "Bg4", weight: 2, minLevel: 0 },
       { san: "c6", weight: 2, minLevel: 6 },
     ],
+    // Da qui il libro mancava (il Nero sarebbe stato scelto dal motore grezzo, senza
+    // nessun vincolo, per il resto del piano): aggiungo una continuazione standard e
+    // verificata (nessun pezzo indifeso per nessuno dei due) per tutte le mosse restanti
+    // del piano, così le lezioni 2 e 3 restano sicure fino alla fine.
+    "Nf3 d5 g3 Nf6 Bg2 e6 O-O": [
+      { san: "Be7", weight: 4, minLevel: 0 },
+      { san: "c5", weight: 2, minLevel: 6 },
+    ],
+    "Nf3 d5 g3 Nf6 Bg2 e6 O-O Be7 d3": [{ san: "O-O", weight: 4, minLevel: 0 }],
+    "Nf3 d5 g3 Nf6 Bg2 e6 O-O Be7 d3 O-O Nbd2": [
+      { san: "c5", weight: 4, minLevel: 0 },
+      { san: "b6", weight: 2, minLevel: 6 },
+    ],
+    "Nf3 d5 g3 Nf6 Bg2 e6 O-O Be7 d3 O-O Nbd2 c5 e4": [{ san: "Nc6", weight: 4, minLevel: 0 }],
+    "Nf3 d5 g3 Nf6 Bg2 e6 O-O Be7 d3 O-O Nbd2 c5 e4 Nc6 Re1": [{ san: "b5", weight: 3, minLevel: 0 }],
+    // e4-e5 attacca davvero il cavallo su f6 (è l'idea tattica descritta in tacticalIdeas):
+    // la risposta corretta è ritirarlo, non lasciarlo lì.
+    "Nf3 d5 g3 Nf6 Bg2 e6 O-O Be7 d3 O-O Nbd2 c5 e4 Nc6 Re1 b5 e5": [{ san: "Nd7", weight: 3, minLevel: 0 }],
   },
   tacticalIdeas: [
     {
